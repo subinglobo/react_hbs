@@ -1,0 +1,208 @@
+.login-container {
+  max-width: 1200px; /* Increased to accommodate Bootstrap grid */
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #000;
+}
+
+.login-header h2 {
+  font-size: 20px;
+  font-weight: normal;
+  color: #555;
+}
+
+.main-content-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 30px 0;
+}
+
+.login-form {
+  width: 368px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.login-form h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    border-radius: 23.5px;
+    height: 47px;
+    padding: 0 24px;
+    color: #808080;
+    font-size: 13px;
+    border: none;
+    background: #f7f7f7;
+    margin-bottom: 25px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.login-button:hover {
+  background-color: #45a049;
+}
+
+.form-links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-links a,
+.form-links button {
+  color: #0066cc;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.form-links a:hover,
+.form-links button:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.carousel-inner img {
+  height: 300px; /* Adjust as needed */
+  object-fit: cover;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  width: 5%;
+}
+
+.carousel-control-prev i,
+.carousel-control-next i {
+  font-size: 2rem;
+  color: #333;
+}
+
+.visit .places {
+  position: relative;
+}
+
+.visit .places img {
+  width: 100%;
+  height: 200px; /* Adjust as needed */
+  object-fit: cover;
+}
+
+.overlay-text-new {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.overlay-text-new h3 {
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.overlay-text-new p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.modal-content {
+  padding: 20px;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.btn-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.alert-danger {
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .main-content-row {
+    flex-direction: column;
+  }
+
+  .login-form {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .col-lg-8 {
+    width: 100%;
+  }
+}
+
+.partners-section {
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: "Poppins";
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  text-transform: capitalize;
+}
+
+.img.down-marquee-images {
+    height: 60px;
+    margin: auto;
+}
+
+ .brand-slider{
+  margin-bottom:60px
+}
