@@ -3,8 +3,11 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
-import "@fortawesome/fontawesome-free/css/all.min.css"; // Add Font Awesome for carousel icons
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./css/Login.css";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -19,7 +22,6 @@ const Login = () => {
     setError(null);
 
     try {
-     
       const loginRequest = {
         username: `${username}`,
         password: `${password}`,
@@ -27,8 +29,10 @@ const Login = () => {
       const response = await axios.post("/auth/login", loginRequest);
       console.log("api login response :", response);
 
-      const token = response.data.token; 
-      sessionStorage.setItem("authToken", token); 
+      const token = response.data.token;
+      const role = response.data.roles;
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("userRole", role);
       navigate("/adminDashboard");
     } catch (err) {
       setError("Invalid username or password");
@@ -50,47 +54,56 @@ const Login = () => {
     }
   };
 
+  const sliderSettings = {
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    arrows: false,
+    dots: false,
+    infinite: true,
+    pauseOnHover: false,
+    responsive: [
+      { breakpoint: 1024, settings: { slidesToShow: 3 } },
+      { breakpoint: 600, settings: { slidesToShow: 2 } },
+      { breakpoint: 480, settings: { slidesToShow: 1 } },
+    ],
+  };
+
   return (
     <div className="login-container">
       <div className="login-header"></div>
 
       <div className="main-content-row">
         <div className="col-lg-8">
-          {/* Carousel */}
-          <div
-            id="offerSlider"
-            className="carousel slide mb-4"
-            data-bs-ride="carousel"
-          >
+          <div id="offerSlider" className="carousel slide mb-4" data-bs-ride="carousel">
             <div className="carousel-inner">
-              {/* Carousel items will be dynamically populated via AJAX */}
               <div className="carousel-item active">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/01.png`}
                   className="d-block w-100"
-                  alt="Carousel Placeholder"
+                  alt="Carousel Placeholder 1"
                 />
               </div>
-              {/* Additional carousel items can be added here */}
-              <div className="carousel-item active">
+              <div className="carousel-item">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/04.png`}
                   className="d-block w-100"
-                  alt="Carousel Placeholder"
+                  alt="Carousel Placeholder 2"
                 />
               </div>
-              <div className="carousel-item active">
+              <div className="carousel-item">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/06.png`}
                   className="d-block w-100"
-                  alt="Carousel Placeholder"
+                  alt="Carousel Placeholder 3"
                 />
               </div>
-              <div className="carousel-item active">
+              <div className="carousel-item">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/07.png`}
                   className="d-block w-100"
-                  alt="Carousel Placeholder"
+                  alt="Carousel Placeholder 4"
                 />
               </div>
             </div>
@@ -114,9 +127,7 @@ const Login = () => {
             </button>
           </div>
 
-          {/* Offer Image Cards Below the Slider */}
           <div className="row g-3">
-            {/* Offer 1 image (dynamic) */}
             <div className="col-md-3 visit">
               <div className="position-relative places">
                 <img
@@ -126,8 +137,6 @@ const Login = () => {
                 />
               </div>
             </div>
-
-            {/* Offer 2 image (dynamic) */}
             <div className="col-md-3 visit">
               <div className="position-relative places">
                 <img
@@ -137,8 +146,6 @@ const Login = () => {
                 />
               </div>
             </div>
-
-            {/* Travel insurance (static) */}
             <div className="col-md-6 visit">
               <div className="position-relative places">
                 <img
@@ -160,6 +167,13 @@ const Login = () => {
         </div>
 
         <div className="login-form">
+          <div class="log">
+							  <img
+                  src={`${process.env.PUBLIC_URL}/images/logo-1.jpg`}
+                  alt="Travel Insurance"
+                  className="img-fluid rounded login-logo"
+                />
+						</div>
           <h3>Sign in</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -291,28 +305,50 @@ const Login = () => {
       </div>
 
       <div className="customers-section">
-        <div className="customer-logos brand-slider">
-          <img
-            src={`${process.env.PUBLIC_URL}/images/marqueeImages/Accor-logo.png`}
-            className="down-marquee-images"
-          />
-          <img
-            src={`${process.env.PUBLIC_URL}/images/marqueeImages/Atlantis.png`}
-            className="down-marquee-images"
-          />
-          <img
-            src={`${process.env.PUBLIC_URL}/images/marqueeImages/Best-Western-logo.png`}
-            className="down-marquee-images"
-          />
-          <img
-            src={`${process.env.PUBLIC_URL}/images/marqueeImages/Crowne-Plaza-logo.png`}
-            className="down-marquee-images"
-          />
-          <img
-            src={`${process.env.PUBLIC_URL}/images/marqueeImages/Four-Seasons-Logo.png`}
-            className="down-marquee-images"
-          />
-        </div>
+        <Slider className="brand-slider" {...sliderSettings}>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Holiday-Inn-logo.png`}
+              className="down-marquee-images"
+              alt="Holiday Inn Logo"
+            />
+          </div>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Accor-logo.png`}
+              className="down-marquee-images"
+              alt="Accor Logo"
+            />
+          </div>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Atlantis.png`}
+              className="down-marquee-images"
+              alt="Atlantis Logo"
+            />
+          </div>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Hilton-logo.png`}
+              className="down-marquee-images"
+              alt="Hilton Logo"
+            />
+          </div>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Hyatt-Logo.png`}
+              className="down-marquee-images"
+              alt="Hyatt Logo"
+            />
+          </div>
+          <div>
+            <img
+              src={`${process.env.PUBLIC_URL}/images/marqueeImages/Sheraton-logo.png`}
+              className="down-marquee-images"
+              alt="Sheraton Logo"
+            />
+          </div>
+        </Slider>
       </div>
     </div>
   );

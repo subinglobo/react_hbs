@@ -1,36 +1,33 @@
 import React, { useState, useEffect } from "react";
 import "./css/Register.css";
-import axiosInstance from "./AxiosInstance";
+import axios from "axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     companyName: "",
     businessType: "",
-    companyType: "",
+    agentCategoryId: "",
     firstName: "",
     lastName: "",
-    mobileNo: "",
-    mailId: "",
-    country: "",
-    province: "",
-    city: "",
+    mobileNumber: "",
+    personalEmail: "",
+    countryId: "",
+    provinceId: "",
+    placeId: "",
     address: "",
-    classification: "registered",
-    gstin: "",
-    provisionalGSTno: "",
-    corrsmailid: "",
-    regstatus: "",
-    hacCode: "",
-    type: "yes",
+    agentClassification: "registered",
+    agentGstIn: "",
+    agentProvisionalGstno: "",
+    agentCorrespondmail: "",
+    agentRegisterstatus: "",
+    agentHsncode: "",
+    agentStatus: "yes",
   });
 
   const [errors, setErrors] = useState({});
   const [countries, setCountries] = useState([]);
   const [provinces, setProvinces] = useState([]);
   const [places, setPlaces] = useState("");
-  const username = "admin";
-  const password = "123";
-  const authToken = btoa(`${username}:${password}`);
 
   // Debug errors state changes
   useEffect(() => {
@@ -39,7 +36,7 @@ const Register = () => {
 
   const countryList = async () => {
     try {
-      const response = await axiosInstance.get("/api/country");
+      const response = await axios.get("/api/country");
       setCountries(response.data);
     } catch (error) {
       console.log("error for country list :", error);
@@ -52,11 +49,21 @@ const Register = () => {
 
   const provinceList = async (countryId) => {
     try {
-      const response = await axiosInstance.get(`/api/province/${countryId}`);
+      const response = await axios.get(`/api/province/getByCountryId/${countryId}`);
 
       setProvinces(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.log("axios call error for province list : ", error);
+    }
+  };
+
+  const cityList = async (stateId) => {
+    try {
+        const response = await axios.get(`/api/destination/getplaces/${stateId}`);
+        setPlaces(Array.isArray(response.data) ? response.data : []);
+
+    } catch (error) {
+      console.log("axios call error for city list : ", error);
     }
   };
 
@@ -81,12 +88,13 @@ const Register = () => {
         (s) => s.stateName === formData.province
       );
       if (selectedState) {
-        //fetchCities(selectedState.id);
+        cityList(selectedState.id);
       }
     }
   }, [formData.province, provinces]);
 
   const handleChange = (e) => {
+    console.log("handle change click");
     const { name, value } = e.target;
     setFormData((prevData) => {
       if (name === "country") {
@@ -102,6 +110,12 @@ const Register = () => {
           ...prevData,
           province: value,
           city: "",
+        };
+      }
+      if (name === "city") {
+        return {
+          ...prevData,
+          city: value,
         };
       }
       return {
@@ -146,16 +160,16 @@ const Register = () => {
       newErrors.mobileNo = "Mobile Number must be 10-15 digits";
 
     // GST fields validation (only if companyType is 3 or 5)
-    if (formData.companyType === "3" || formData.companyType === "5") {
-      if (formData.classification === "registered" && !formData.gstin.trim())
-        newErrors.gstin = "GSTIN is required for registered agencies";
-      if (formData.gstin && !/^[A-Z0-9]{15}$/.test(formData.gstin.trim()))
-        newErrors.gstin = "GSTIN must be 15 alphanumeric characters";
+    if (formData.agentCategoryId === "3" || formData.agentCategoryId === "5") {
+      if (formData.agentClassification === "registered" && !formData.agentGstIn.trim())
+        newErrors.agentGstIn = "GSTIN is required for registered agencies";
+      if (formData.agentGstIn && !/^[A-Z0-9]{15}$/.test(formData.agentGstIn.trim()))
+        newErrors.agentGstIn = "GSTIN must be 15 alphanumeric characters";
       if (
-        formData.corrsmailid &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.corrsmailid)
+        formData.agentCorrespondmail &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.agentCorrespondmail)
       )
-        newErrors.corrsmailid = "Invalid correspondence email format";
+        newErrors.agentCorrespondmail = "Invalid correspondence email format";
     }
 
     return newErrors;
@@ -172,41 +186,29 @@ const Register = () => {
     }
     console.log("Form Data Submitted:", formData);
     setFormData({
-      companyName: "",
-      businessType: "",
-      companyType: "",
-      firstName: "",
-      lastName: "",
-      mobileNo: "",
-      mailId: "",
-      country: "",
-      province: "",
-      city: "",
-      address: "",
-      classification: "registered",
-      gstin: "",
-      provisionalGSTno: "",
-      corrsmailid: "",
-      regstatus: "",
-      hacCode: "",
-      type: "yes",
+    companyName: "",
+    businessType: "",
+    agentCategoryId: "",
+    firstName: "",
+    lastName: "",
+    mobileNumber: "",
+    personalEmail: "",
+    countryId: "",
+    provinceId: "",
+    placeId: "",
+    address: "",
+    agentClassification: "registered",
+    agentGstIn: "",
+    agentProvisionalGstno: "",
+    agentCorrespondmail: "",
+    agentRegisterstatus: "",
+    agentHsncode: "",
+    agentStatus: "yes",
     });
-    setErrors({});
-  };
 
-  const cities = {
-    California: ["Los Angeles", "San Francisco", "San Diego"],
-    Texas: ["Houston", "Austin", "Dallas"],
-    "New York": ["New York City", "Buffalo", "Rochester"],
-    Ontario: ["Toronto", "Ottawa", "Mississauga"],
-    Quebec: ["Montreal", "Quebec City", "Laval"],
-    "British Columbia": ["Vancouver", "Victoria", "Kelowna"],
-    Maharashtra: ["Mumbai", "Pune", "Nagpur"],
-    Karnataka: ["Bangalore", "Mysore", "Mangalore"],
-    Delhi: ["New Delhi", "Noida", "Gurgaon"],
-    England: ["London", "Manchester", "Birmingham"],
-    Scotland: ["Edinburgh", "Glasgow", "Aberdeen"],
-    Wales: ["Cardiff", "Swansea", "Newport"],
+    const registerResponse = axios.post('/api/agent/register' , formData);
+    console.log("registerResponse:: " , registerResponse)
+    setErrors({});
   };
 
   return (
@@ -217,7 +219,7 @@ const Register = () => {
           <div className="logo-container">
             <img
               className="login-logo"
-              src={`${process.env.PUBLIC_URL}/images/logo.png`}
+              src={`${process.env.PUBLIC_URL}/images/logo-1.jpg`}
               alt="Logo"
               style={{ width: "150px" }}
             />
@@ -470,10 +472,13 @@ const Register = () => {
                           disabled={!formData.province}
                         >
                           <option value="">SELECT</option>
-                          {formData.province &&
-                            cities[formData.province]?.map((city) => (
-                              <option key={city} value={city}>
-                                {city}
+                         {Array.isArray(places) &&
+                            places.map((place) => (
+                              <option
+                                key={place.id}
+                                value={place.name}
+                              >
+                                {place.name}
                               </option>
                             ))}
                         </select>
