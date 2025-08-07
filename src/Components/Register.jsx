@@ -28,12 +28,21 @@ const Register = () => {
   const [countries, setCountries] = useState([]);
   const [provinces, setProvinces] = useState([]);
   const [places, setPlaces] = useState("");
+  const [agentCategoryies , setAgentCategoryies] = useState([]);
 
-  // Debug errors state changes
-  useEffect(() => {
-    console.log("errors state updated:", errors);
-  }, [errors]);
+  const agentCategoryList = async() => {
 
+    try{
+
+      const agentCatResponse = await axios.get('/api/agentCategory');
+      setAgentCategoryies(agentCatResponse.data);
+
+    }catch(error){
+      console.log("agent category api call error::" , error)
+    }
+  }
+
+  
   const countryList = async () => {
     try {
       const response = await axios.get("/api/country");
@@ -45,6 +54,7 @@ const Register = () => {
 
   useEffect(() => {
     countryList();
+     agentCategoryList();
   }, []);
 
   const provinceList = async (countryId) => {
@@ -68,54 +78,51 @@ const Register = () => {
   };
 
   useEffect(() => {
-    if (formData.country) {
+    if (formData.countryId) {
       setProvinces([]); // Reset states when country changes
       setPlaces([]); // Reset cities when country changes
-      const selectedCountry = countries.find(
-        (c) => c.name === formData.country
-      );
-      if (selectedCountry) {
-        console.log("selectedCountry:::", selectedCountry);
-        provinceList(selectedCountry.id);
-      }
+      provinceList(formData.countryId);
     }
-  }, [formData.country, countries]);
-
+    }, [formData.countryId]);
+ 
   useEffect(() => {
-    if (formData.province) {
+    if (formData.provinceId) {
       setPlaces([]); // Reset cities when state changes
-      const selectedState = provinces.find(
-        (s) => s.stateName === formData.province
-      );
-      if (selectedState) {
-        cityList(selectedState.id);
-      }
+      cityList(formData.provinceId);
     }
-  }, [formData.province, provinces]);
+  }, [formData.provinceId]);
 
   const handleChange = (e) => {
     console.log("handle change click");
     const { name, value } = e.target;
     setFormData((prevData) => {
-      if (name === "country") {
+      if(name === "agentCategoryId"){
         return {
           ...prevData,
-          country: value,
-          province: "",
-          city: "",
+          agentCategoryId:value,
         };
       }
-      if (name === "province") {
+
+
+      if (name === "countryId") {
         return {
           ...prevData,
-          province: value,
-          city: "",
+          countryId: value,
+          provinceId: "",
+          placeId: "",
         };
       }
-      if (name === "city") {
+      if (name === "provinceId") {
         return {
           ...prevData,
-          city: value,
+          provinceId: value,
+          placeId: "",
+        };
+      }
+      if (name === "placeId") {
+        return {
+          ...prevData,
+          placeId: value,
         };
       }
       return {
@@ -137,30 +144,29 @@ const Register = () => {
       newErrors.companyName = "Company Name is required";
     if (!formData.businessType.trim())
       newErrors.businessType = "Business Type is required";
-    if (!formData.companyType)
-      newErrors.companyType = "Company Type is required";
+    if (!formData.agentCategoryId)
+      newErrors.agentCategoryId = "Company Type or Agent category is required";
     if (!formData.firstName.trim())
       newErrors.firstName = "First Name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last Name is required";
-    if (!formData.mobileNo.trim())
-      newErrors.mobileNo = "Mobile Number is required";
-    if (!formData.mailId.trim()) newErrors.mailId = "Email ID is required";
-    if (!formData.country) newErrors.country = "Country is required";
-    if (!formData.province) newErrors.province = "Province is required";
-    if (!formData.city) newErrors.city = "City is required";
+    if (!formData.mobileNumber.trim())  newErrors.mobileNumber = "Mobile Number is required";
+    if (!formData.personalEmail.trim()) newErrors.personalEmail = "Email ID is required";
+    if (!formData.countryId) newErrors.countryId = "Country is required";
+    if (!formData.provinceId) newErrors.provinceId = "Province is required";
+    if (!formData.placeId) newErrors.placeId = "City is required";
     if (!formData.address.trim()) newErrors.address = "Address is required";
 
     // Additional format validations
-    if (formData.mailId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.mailId))
-      newErrors.mailId = "Invalid email format";
+    if (formData.personalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail))
+      newErrors.personalEmail = "Invalid email format";
     if (
-      formData.mobileNo &&
-      !/^\+?\d{10,15}$/.test(formData.mobileNo.replace(/\s/g, ""))
+      formData.mobileNumber &&
+      !/^\+?\d{10,15}$/.test(formData.mobileNumber.replace(/\s/g, ""))
     )
-      newErrors.mobileNo = "Mobile Number must be 10-15 digits";
+      newErrors.mobileNumber = "Mobile Number must be 10-15 digits";
 
     // GST fields validation (only if companyType is 3 or 5)
-    if (formData.agentCategoryId === "3" || formData.agentCategoryId === "5") {
+    if (formData.countryId === "1" ) {
       if (formData.agentClassification === "registered" && !formData.agentGstIn.trim())
         newErrors.agentGstIn = "GSTIN is required for registered agencies";
       if (formData.agentGstIn && !/^[A-Z0-9]{15}$/.test(formData.agentGstIn.trim()))
@@ -176,6 +182,7 @@ const Register = () => {
   };
 
   const handleSubmit = (e) => {
+
     e.preventDefault();
     const formErrors = validateForm();
     console.log("formErrors::", formErrors);
@@ -298,20 +305,19 @@ const Register = () => {
                       <div className="col-xs-6 col-md-8">
                         <select
                           id="companyType"
-                          name="companyType"
-                          value={formData.companyType}
+                          name="agentCategoryId"
+                          value={formData.agentCategoryId}
                           onChange={handleChange}
                           className={`form-control company-type ${
-                            errors.companyType ? "error" : ""
+                            errors.agentCategoryId ? "error" : ""
                           }`}
                         >
                           <option value="">SELECT</option>
-                          <option value="1">B2C</option>
-                          <option value="2">Cooperate Customer</option>
-                          <option value="3">Travel Agents</option>
-                          <option value="4">Travel Coordinator</option>
-                          <option value="5">B2B</option>
-                          <option value="6">DMC</option>
+                            {agentCategoryies.map((agent) => (
+                            <option key={agent.agentCategoryId} value={agent.agentCategoryId}>
+                              {agent.name}
+                            </option>
+                          ))}
                         </select>
                         <p className="error-text">{errors.companyType || ""}</p>
                       </div>
@@ -365,15 +371,16 @@ const Register = () => {
                         <input
                           type="text"
                           className={`form-control mobile-no ${
-                            errors.mobileNo ? "error" : ""
+                            errors.mobileNumber ? "error" : ""
                           }`}
                           id="mobileNo"
-                          name="mobileNo"
-                          value={formData.mobileNo}
+                          name="mobileNumber"
+                          maxLength={10}
+                          value={formData.mobileNumber}
                           onChange={handleChange}
                           placeholder="Mobile No"
                         />
-                        <p className="error-text">{errors.mobileNo || ""}</p>
+                        <p className="error-text">{errors.mobileNumber || ""}</p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -386,15 +393,15 @@ const Register = () => {
                         <input
                           type="email"
                           className={`form-control mail-id ${
-                            errors.mailId ? "error" : ""
+                            errors.personalEmail ? "error" : ""
                           }`}
                           id="mailId"
-                          name="mailId"
-                          value={formData.mailId}
+                          name="personalEmail"
+                          value={formData.personalEmail}
                           onChange={handleChange}
                           placeholder="Enter EmailId"
                         />
-                        <p className="error-text">{errors.mailId || ""}</p>
+                        <p className="error-text">{errors.personalEmail}</p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -406,21 +413,21 @@ const Register = () => {
                       <div className="col-xs-6 col-md-8">
                         <select
                           id="country"
-                          name="country"
-                          value={formData.country}
+                          name="countryId"
+                          value={formData.countryId}
                           onChange={handleChange}
                           className={`form-control country ${
-                            errors.country ? "error" : ""
+                            errors.countryId ? "error" : ""
                           }`}
                         >
                           <option value="">SELECT</option>
                           {countries.map((country) => (
-                            <option key={country.id} value={country.name}>
+                            <option key={country.id} value={country.id}>
                               {country.name}
                             </option>
                           ))}
                         </select>
-                        <p className="error-text">{errors.country || ""}</p>
+                        <p className="error-text">{errors.countryId || ""}</p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -432,26 +439,26 @@ const Register = () => {
                       <div className="col-xs-6 col-md-8">
                         <select
                           id="province"
-                          name="province"
-                          value={formData.province}
+                          name="provinceId"
+                          value={formData.provinceId}
                           onChange={handleChange}
                           className={`form-control province ${
-                            errors.province ? "error" : ""
+                            errors.provinceId ? "error" : ""
                           }`}
-                          disabled={!formData.country}
+                          disabled={!formData.countryId}
                         >
                           <option value="">SELECT</option>
                           {Array.isArray(provinces) &&
                             provinces.map((province) => (
                               <option
                                 key={province.id}
-                                value={province.stateName}
+                                value={province.id}
                               >
                                 {province.stateName}
                               </option>
                             ))}
                         </select>
-                        <p className="error-text">{errors.province || ""}</p>
+                        <p className="error-text">{errors.provinceId || ""}</p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -463,26 +470,26 @@ const Register = () => {
                       <div className="col-xs-6 col-md-8">
                         <select
                           id="city"
-                          name="city"
-                          value={formData.city}
+                          name="placeId"
+                          value={formData.placeId}
                           onChange={handleChange}
                           className={`form-control city ${
-                            errors.city ? "error" : ""
+                            errors.placeId ? "error" : ""
                           }`}
-                          disabled={!formData.province}
+                          disabled={!formData.provinceId}
                         >
                           <option value="">SELECT</option>
                          {Array.isArray(places) &&
                             places.map((place) => (
                               <option
                                 key={place.id}
-                                value={place.name}
+                                value={place.id}
                               >
                                 {place.name}
                               </option>
                             ))}
                         </select>
-                        <p className="error-text">{errors.city || ""}</p>
+                        <p className="error-text">{errors.placeId || ""}</p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -509,8 +516,7 @@ const Register = () => {
                     <div
                       className="col-xs-12 agent-detail"
                       hidden={
-                        formData.companyType !== "3" &&
-                        formData.companyType !== "5"
+                        formData.countryId !== "1"
                       }
                     >
                       <div className="row">
@@ -523,7 +529,7 @@ const Register = () => {
                         <div className="col-xs-12 col-md-6 form-group">
                           <div className="col-xs-3 col-md-4">
                             <label className="color-grey">
-                              Agency Classification
+                             Agency Classification
                             </label>
                           </div>
                           <div className="col-xs-6 col-md-8">
@@ -547,23 +553,24 @@ const Register = () => {
                         </div>
                         <div className="col-xs-12 col-md-6 form-group">
                           <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">Agency GSTIN</label>
+                            <label className="color-grey">
+                               <span className="required">*</span> Agency GSTIN</label>
                           </div>
                           <div className="col-xs-6 col-md-8">
                             <input
                               type="text"
                               name="gstin"
                               id="gstin"
-                              value={formData.gstin}
+                              value={formData.agentGstIn}
                               onChange={handleChange}
                               placeholder="Agency GSTIN"
                               className={`form-control gstin ${
-                                errors.gstin ? "error" : ""
+                                errors.agentGstIn ? "error" : ""
                               }`}
                               maxLength={30}
                               minLength={1}
                             />
-                            <p className="error-text">{errors.gstin || ""}</p>
+                            <p className="error-text">{errors.agentGstIn || ""}</p>
                           </div>
                         </div>
                         <div className="clearfix"></div>
