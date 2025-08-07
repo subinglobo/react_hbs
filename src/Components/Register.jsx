@@ -181,42 +181,69 @@ const Register = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {  // Make the function async
+  e.preventDefault();
+  const formErrors = validateForm();
+  
+  if (Object.keys(formErrors).length > 0) {
+    setErrors(formErrors);
+    return;
+  }
 
-    e.preventDefault();
-    const formErrors = validateForm();
-    console.log("formErrors::", formErrors);
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      console.log("errors state after setErrors:", formErrors);
-      return;
-    }
-    console.log("Form Data Submitted:", formData);
+  try {
+    const registerResponse = await axios.post('/api/agent/register', formData);
+    console.log("registerResponse::", registerResponse);
+    
+    // Reset form on success
     setFormData({
-    companyName: "",
-    businessType: "",
-    agentCategoryId: "",
-    firstName: "",
-    lastName: "",
-    mobileNumber: "",
-    personalEmail: "",
-    countryId: "",
-    provinceId: "",
-    placeId: "",
-    address: "",
-    agentClassification: "registered",
-    agentGstIn: "",
-    agentProvisionalGstno: "",
-    agentCorrespondmail: "",
-    agentRegisterstatus: "",
-    agentHsncode: "",
-    agentStatus: "yes",
+      companyName: "",
+      businessType: "",
+      agentCategoryId: "",
+      firstName: "",
+      lastName: "",
+      mobileNumber: "",
+      personalEmail: "",
+      countryId: "",
+      provinceId: "",
+      placeId: "",
+      address: "",
+      agentClassification: "registered",
+      agentGstIn: "",
+      agentProvisionalGstno: "",
+      agentCorrespondmail: "",
+      agentRegisterstatus: "",
+      agentHsncode: "",
+      agentStatus: "yes",
     });
-
-    const registerResponse = axios.post('/api/agent/register' , formData);
-    console.log("registerResponse:: " , registerResponse)
     setErrors({});
-  };
+
+  } catch (error) {
+    if (error.response) {
+      // Server responded with a status code outside 2xx range
+      console.error("Registration error:", error.response.data);
+      
+      // Display the error message from server
+      if (error.response.data.message) {
+        alert(error.response.data.message);  // Show error message as alert
+      } else {
+        alert("An error occurred during registration");
+      }
+      
+      // Optionally set specific form errors
+      if (error.response.data.errors) {
+        setErrors(error.response.data.errors);
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error("No response received:", error.request);
+      alert("Network error - please try again");
+    } else {
+      // Something happened in setting up the request
+      console.error("Request setup error:", error.message);
+      alert("An unexpected error occurred");
+    }
+  }
+};
 
   return (
     <div className="center">
