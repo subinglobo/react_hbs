@@ -8,6 +8,7 @@ import "./css/Login.css";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { redirectToDashboard } from "./RedirectionToDashBoard";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -30,10 +31,20 @@ const Login = () => {
       console.log("api login response :", response);
 
       const token = response.data.token;
-      const role = response.data.roles;
+      const roles = response.data.roles;
       localStorage.setItem("authToken", token);
-      localStorage.setItem("userRole", role);
-      navigate("/adminDashboard");
+      localStorage.setItem("userRole", roles);
+      console.log("roles::" , roles)
+      if (roles.length > 1) {
+        // Multiple roles - navigate to role selection
+        console.log("navigate to select roles")
+        navigate("/select-userRole", { state: { roles } });
+      } else {
+        // Single role - navigate directly to dashboard
+            redirectToDashboard(roles[0] || "User", navigate);
+      }
+
+      //("/adminDashboard");
     } catch (err) {
       setError("Invalid username or password");
     }

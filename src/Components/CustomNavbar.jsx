@@ -13,7 +13,7 @@ const CustomNavbar = () => {
   };
 
   return (
-    <Navbar bg="light" expand="lg" className="shadow-sm">
+    <Navbar fixed="top" bg="light" expand="lg" className="shadow-sm">
       <Container>
         <Navbar.Brand href="/">
           <img

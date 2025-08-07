@@ -12,6 +12,10 @@ import PrivateRoute from "./Components/PrivateRoute"; // Import PrivateRoute
 import { Toaster } from 'react-hot-toast';
 import "react-toastify/dist/ReactToastify.css";
 
+import AgentDashboard from "./Components/dashboards/AgentDashboard";
+import LandingPage from "./Components/dashboards/LandingPage";
+import SelectRole from "./pages/SelectRole";
+
 function App() {
   return (
     <div className="App">
@@ -21,6 +25,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+           <Route path="/select-userRole" element={<SelectRole />} />
           <Route path="/register" element={<Register />} />
 
           {/* Protected Routes */}
@@ -41,6 +46,22 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+           <Route
+            path="/agentDashboard"
+            element={
+              <PrivateRoute>
+                <AgentDashboard />
+              </PrivateRoute>
+            }
+          />
+           <Route
+            path="/landingPage"
+            element={
+              <PrivateRoute>
+                <LandingPage />
               </PrivateRoute>
             }
           />
