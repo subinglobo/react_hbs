@@ -545,8 +545,8 @@ const Register = () => {
                             </select>
                             <input
                               type="hidden"
-                              id="agentgstId"
-                              name="agentgstId"
+                              id="gstInid"
+                              name="gstInid"
                               value=""
                             />
                           </div>
@@ -559,7 +559,7 @@ const Register = () => {
                           <div className="col-xs-6 col-md-8">
                             <input
                               type="text"
-                              name="gstin"
+                              name="agentGstIn"
                               id="gstin"
                               value={formData.agentGstIn}
                               onChange={handleChange}
