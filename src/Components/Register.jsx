@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./css/Register.css";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -28,21 +29,17 @@ const Register = () => {
   const [countries, setCountries] = useState([]);
   const [provinces, setProvinces] = useState([]);
   const [places, setPlaces] = useState("");
-  const [agentCategoryies , setAgentCategoryies] = useState([]);
+  const [agentCategoryies, setAgentCategoryies] = useState([]);
 
-  const agentCategoryList = async() => {
-
-    try{
-
-      const agentCatResponse = await axios.get('/api/agentCategory');
+  const agentCategoryList = async () => {
+    try {
+      const agentCatResponse = await axios.get("/api/agentCategory");
       setAgentCategoryies(agentCatResponse.data);
-
-    }catch(error){
-      console.log("agent category api call error::" , error)
+    } catch (error) {
+      console.log("agent category api call error::", error);
     }
-  }
+  };
 
-  
   const countryList = async () => {
     try {
       const response = await axios.get("/api/country");
@@ -54,12 +51,14 @@ const Register = () => {
 
   useEffect(() => {
     countryList();
-     agentCategoryList();
+    agentCategoryList();
   }, []);
 
   const provinceList = async (countryId) => {
     try {
-      const response = await axios.get(`/api/province/getByCountryId/${countryId}`);
+      const response = await axios.get(
+        `/api/province/getByCountryId/${countryId}`
+      );
 
       setProvinces(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
@@ -69,9 +68,8 @@ const Register = () => {
 
   const cityList = async (stateId) => {
     try {
-        const response = await axios.get(`/api/destination/getplaces/${stateId}`);
-        setPlaces(Array.isArray(response.data) ? response.data : []);
-
+      const response = await axios.get(`/api/destination/getplaces/${stateId}`);
+      setPlaces(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.log("axios call error for city list : ", error);
     }
@@ -83,8 +81,8 @@ const Register = () => {
       setPlaces([]); // Reset cities when country changes
       provinceList(formData.countryId);
     }
-    }, [formData.countryId]);
- 
+  }, [formData.countryId]);
+
   useEffect(() => {
     if (formData.provinceId) {
       setPlaces([]); // Reset cities when state changes
@@ -96,13 +94,12 @@ const Register = () => {
     console.log("handle change click");
     const { name, value } = e.target;
     setFormData((prevData) => {
-      if(name === "agentCategoryId"){
+      if (name === "agentCategoryId") {
         return {
           ...prevData,
-          agentCategoryId:value,
+          agentCategoryId: value,
         };
       }
-
 
       if (name === "countryId") {
         return {
@@ -149,15 +146,20 @@ const Register = () => {
     if (!formData.firstName.trim())
       newErrors.firstName = "First Name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last Name is required";
-    if (!formData.mobileNumber.trim())  newErrors.mobileNumber = "Mobile Number is required";
-    if (!formData.personalEmail.trim()) newErrors.personalEmail = "Email ID is required";
+    if (!formData.mobileNumber.trim())
+      newErrors.mobileNumber = "Mobile Number is required";
+    if (!formData.personalEmail.trim())
+      newErrors.personalEmail = "Email ID is required";
     if (!formData.countryId) newErrors.countryId = "Country is required";
     if (!formData.provinceId) newErrors.provinceId = "Province is required";
     if (!formData.placeId) newErrors.placeId = "City is required";
     if (!formData.address.trim()) newErrors.address = "Address is required";
 
     // Additional format validations
-    if (formData.personalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail))
+    if (
+      formData.personalEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail)
+    )
       newErrors.personalEmail = "Invalid email format";
     if (
       formData.mobileNumber &&
@@ -166,10 +168,16 @@ const Register = () => {
       newErrors.mobileNumber = "Mobile Number must be 10-15 digits";
 
     // GST fields validation (only if companyType is 3 or 5)
-    if (formData.countryId === "1" ) {
-      if (formData.agentClassification === "registered" && !formData.agentGstIn.trim())
+    if (formData.countryId === "1") {
+      if (
+        formData.agentClassification === "registered" &&
+        !formData.agentGstIn.trim()
+      )
         newErrors.agentGstIn = "GSTIN is required for registered agencies";
-      if (formData.agentGstIn && !/^[A-Z0-9]{15}$/.test(formData.agentGstIn.trim()))
+      if (
+        formData.agentGstIn &&
+        !/^[A-Z0-9]{15}$/.test(formData.agentGstIn.trim())
+      )
         newErrors.agentGstIn = "GSTIN must be 15 alphanumeric characters";
       if (
         formData.agentCorrespondmail &&
@@ -181,69 +189,67 @@ const Register = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {  // Make the function async
-  e.preventDefault();
-  const formErrors = validateForm();
-  
-  if (Object.keys(formErrors).length > 0) {
-    setErrors(formErrors);
-    return;
-  }
+  const handleSubmit = async (e) => {
+    // Make the function async
+    e.preventDefault();
+    const formErrors = validateForm();
 
-  try {
-    const registerResponse = await axios.post('/api/agent/register', formData);
-    console.log("registerResponse::", registerResponse);
-    
-    // Reset form on success
-    setFormData({
-      companyName: "",
-      businessType: "",
-      agentCategoryId: "",
-      firstName: "",
-      lastName: "",
-      mobileNumber: "",
-      personalEmail: "",
-      countryId: "",
-      provinceId: "",
-      placeId: "",
-      address: "",
-      agentClassification: "registered",
-      agentGstIn: "",
-      agentProvisionalGstno: "",
-      agentCorrespondmail: "",
-      agentRegisterstatus: "",
-      agentHsncode: "",
-      agentStatus: "yes",
-    });
-    setErrors({});
-
-  } catch (error) {
-    if (error.response) {
-      // Server responded with a status code outside 2xx range
-      console.error("Registration error:", error.response.data);
-      
-      // Display the error message from server
-      if (error.response.data.message) {
-        alert(error.response.data.message);  // Show error message as alert
-      } else {
-        alert("An error occurred during registration");
-      }
-      
-      // Optionally set specific form errors
-      if (error.response.data.errors) {
-        setErrors(error.response.data.errors);
-      }
-    } else if (error.request) {
-      // Request was made but no response received
-      console.error("No response received:", error.request);
-      alert("Network error - please try again");
-    } else {
-      // Something happened in setting up the request
-      console.error("Request setup error:", error.message);
-      alert("An unexpected error occurred");
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
     }
-  }
-};
+
+    try {
+      const registerResponse = await axios.post(
+        "/api/agent/register",
+        formData
+      );
+      console.log("registerResponse::", registerResponse);
+      toast.success('Successfully Registered!')
+
+     // Reset form on success
+      setFormData({
+        companyName: "",
+        businessType: "",
+        agentCategoryId: "",
+        firstName: "",
+        lastName: "",
+        mobileNumber: "",
+        personalEmail: "",
+        countryId: "",
+        provinceId: "",
+        placeId: "",
+        address: "",
+        agentClassification: "registered",
+        agentGstIn: "",
+        agentProvisionalGstno: "",
+        agentCorrespondmail: "",
+        agentRegisterstatus: "",
+        agentHsncode: "",
+        agentStatus: "yes",
+      });
+      setErrors({});
+    } catch (error) {
+      if (error.response) {
+        // Display the error message from server
+        if (error.response.data.message) {
+          // alert(error.response.data.message);  // Show error message as alert
+          toast.error(error.response.data.message);
+        } else {
+          toast.error("An error occurred during registration");
+        }
+
+        if (error.response.data.errors) {
+          setErrors(error.response.data.errors);
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        toast.error("Network error - please try again");
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+    }
+  };
 
   return (
     <div className="center">
@@ -340,8 +346,11 @@ const Register = () => {
                           }`}
                         >
                           <option value="">SELECT</option>
-                            {agentCategoryies.map((agent) => (
-                            <option key={agent.agentCategoryId} value={agent.agentCategoryId}>
+                          {agentCategoryies.map((agent) => (
+                            <option
+                              key={agent.agentCategoryId}
+                              value={agent.agentCategoryId}
+                            >
                               {agent.name}
                             </option>
                           ))}
@@ -407,7 +416,9 @@ const Register = () => {
                           onChange={handleChange}
                           placeholder="Mobile No"
                         />
-                        <p className="error-text">{errors.mobileNumber || ""}</p>
+                        <p className="error-text">
+                          {errors.mobileNumber || ""}
+                        </p>
                       </div>
                     </div>
                     <div className="col-xs-12 col-md-6 form-group">
@@ -477,10 +488,7 @@ const Register = () => {
                           <option value="">SELECT</option>
                           {Array.isArray(provinces) &&
                             provinces.map((province) => (
-                              <option
-                                key={province.id}
-                                value={province.id}
-                              >
+                              <option key={province.id} value={province.id}>
                                 {province.stateName}
                               </option>
                             ))}
@@ -506,12 +514,9 @@ const Register = () => {
                           disabled={!formData.provinceId}
                         >
                           <option value="">SELECT</option>
-                         {Array.isArray(places) &&
+                          {Array.isArray(places) &&
                             places.map((place) => (
-                              <option
-                                key={place.id}
-                                value={place.id}
-                              >
+                              <option key={place.id} value={place.id}>
                                 {place.name}
                               </option>
                             ))}
@@ -542,9 +547,7 @@ const Register = () => {
                     </div>
                     <div
                       className="col-xs-12 agent-detail"
-                      hidden={
-                        formData.countryId !== "1"
-                      }
+                      hidden={formData.countryId !== "1"}
                     >
                       <div className="row">
                         <div className="col-xs-12">
@@ -556,7 +559,7 @@ const Register = () => {
                         <div className="col-xs-12 col-md-6 form-group">
                           <div className="col-xs-3 col-md-4">
                             <label className="color-grey">
-                             Agency Classification
+                              Agency Classification
                             </label>
                           </div>
                           <div className="col-xs-6 col-md-8">
@@ -581,7 +584,8 @@ const Register = () => {
                         <div className="col-xs-12 col-md-6 form-group">
                           <div className="col-xs-3 col-md-4">
                             <label className="color-grey">
-                               <span className="required">*</span> Agency GSTIN</label>
+                              <span className="required">*</span> Agency GSTIN
+                            </label>
                           </div>
                           <div className="col-xs-6 col-md-8">
                             <input
@@ -597,7 +601,9 @@ const Register = () => {
                               maxLength={30}
                               minLength={1}
                             />
-                            <p className="error-text">{errors.agentGstIn || ""}</p>
+                            <p className="error-text">
+                              {errors.agentGstIn || ""}
+                            </p>
                           </div>
                         </div>
                         <div className="clearfix"></div>
