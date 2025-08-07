@@ -1,0 +1,140 @@
+/* Hover Effects */
+.hoverable {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Hover */
+.sidebar-item:hover {
+  background-color: #f8f9fa;
+  border-left: 3px solid #0d6efd;
+}
+
+/* Button Hover */
+.btn.hoverable:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* KPI Card Hover */
+.kpi-card:hover {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #0d6efd;
+}
+
+/* Chart Card Hover */
+.chart-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hoverable:hover {
+    transform: none;
+  }
+}
+
+/* Dropdown styles */
+.hover-bg-light {
+  transition: background-color 0.2s ease;
+}
+
+.hover-bg-light:hover {
+  background-color: #f8f9fa !important;
+}
+
+.ps-4 {
+  transition: all 0.3s ease;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.ps-4.show {
+  max-height: 500px;
+}
+
+/* Card hover effects */
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Sidebar arrow indicator */
+.ms-auto {
+  font-size: 0.8em;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .w-25 {
+    width: 100% !important;
+  }
+  
+  .d-flex {
+    flex-direction: column;
+  }
+}
+
+/* Dropdown styles */
+.hover-bg-light {
+  transition: all 0.2s ease;
+}
+
+.hover-bg-light:hover {
+  background-color: #f8f9fa !important;
+}
+
+.dropdown-items {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.dropdown-items.show {
+  max-height: 500px;
+}
+
+/* Card hover effects */
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Sidebar arrow indicator */
+.ms-auto {
+  font-size: 0.8em;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .w-25 {
+    width: 100% !important;
+  }
+  
+  .d-flex {
+    flex-direction: column;
+  }
+}
