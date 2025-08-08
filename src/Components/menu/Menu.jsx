@@ -4,6 +4,8 @@ import "../css/Menu.css";
 import { FaTachometerAlt, FaUsers, FaCog } from "react-icons/fa";
 import { FaLeaf } from "react-icons/fa";
 import { LuLeaf } from "react-icons/lu";
+import { AiFillProfile } from "react-icons/ai";
+import { MdAppRegistration } from "react-icons/md";
 
 const menuItems = [
   {
@@ -39,52 +41,130 @@ const menuItems = [
       },
       {
         title: "Mapping Settings",
-        submenu: ["City", "Country", "Hotel"],
+        icon: <LuLeaf />,
+        submenu: [
+          { title: "City", icon: <FaLeaf /> },
+          { title: "Country", icon: <FaLeaf /> },
+          { title: "Hotel", icon: <FaLeaf /> },
+        ],
       },
       {
-        title: "UnMapping Settings",
-        submenu: ["City", "Country", "Hotel"],
+        title: "UnMapping",
+        icon: <LuLeaf />,
+        submenu: [
+          { title: "City", icon: <FaLeaf /> },
+          { title: "Country", icon: <FaLeaf /> },
+          { title: "Hotel", icon: <FaLeaf /> },
+        ],
       },
       {
         title: "Hotel Settings",
+        icon: <LuLeaf />,
         submenu: [
-          "Hotel Category",
-          "Hotel Type",
-          "Occupancy Type",
-          "Season Type",
-          "Room Category",
-          "Room Type",
-          "Hotel Amenity",
-          "Room Amenity",
-          "Meal Plan",
+          { title: "Hotel Category", icon: <FaLeaf /> },
+          { title: "Hotel Type", icon: <FaLeaf /> },
+          { title: "Occupancy Type", icon: <FaLeaf /> },
+          { title: "Season Type", icon: <FaLeaf /> },
+          { title: "Room Category", icon: <FaLeaf /> },
+          { title: "Room Type", icon: <FaLeaf /> },
+          { title: "Hotel Amenity", icon: <FaLeaf /> },
+          { title: "Room Amenity", icon: <FaLeaf /> },
+          { title: "Meal Plan", icon: <FaLeaf /> },
         ],
       },
       {
         title: "Agent Settings",
-        submenu: ["Agent Category"],
+        icon: <LuLeaf />,
+        submenu: [{ title: "Agent Category", icon: <FaLeaf /> }],
       },
       {
         title: "Package Settings",
+        icon: <LuLeaf />,
         submenu: [
-          "Package Category",
-          "Package Type",
-          "Day Activity",
-          "Itinerary",
-          "Visa Details",
-          "Terms and Conditions",
+            { title: "Package Category", icon: <FaLeaf /> },
+            { title: "Package Type", icon: <FaLeaf /> },
+            { title: "Day Activity", icon: <FaLeaf /> },
+            { title: "Itinerary", icon: <FaLeaf /> },
+            { title: "Visa Details", icon: <FaLeaf /> },
+            { title: "Terms and Conditions", icon: <FaLeaf /> },
+        
         ],
       },
       {
         title: "Payment Gateway",
+        icon: <LuLeaf />,
       },
       {
         title: "Communication Mail",
+        icon: <LuLeaf />,
       },
     ],
   },
+  { 
+    title: "Company Profile" ,
+    icon : <AiFillProfile />,
+},
   {
-    title: "Forms",
-    submenu: [{ title: "Form 1" }, { title: "Form 2" }],
+    title: "Registration",
+    icon:<MdAppRegistration />,
+    submenu: [
+        {
+        title: "Hotel",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Agent",
+        icon: <LuLeaf />,
+        },
+          {
+        title: "Employee",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Cab Provider",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Activity Provider",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Package",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Supplier Registration",
+        icon: <LuLeaf />,
+        },
+        
+    ],
+  },
+    {
+    title: "New Booking",
+    icon:<MdAppRegistration />,
+    submenu: [
+        {
+        title: "Hotel Booking",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Make Your Own Package",
+        icon: <LuLeaf />,
+        },
+          {
+        title: "Package Booking",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Offline Booking ",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Tours and Activity",
+        icon: <LuLeaf />,
+        },
+              
+    ],
   },
   {
     title: "Components",
