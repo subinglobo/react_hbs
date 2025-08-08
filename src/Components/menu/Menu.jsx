@@ -199,6 +199,26 @@ const menuItems = [
               
     ],
   },
+   { 
+    title: "Invoice" ,
+    icon : <AiFillProfile />,
+},
+{ 
+    title: "Calender" ,
+    icon : <AiFillProfile />,
+},
+{ 
+    title: "Report" ,
+    icon : <AiFillProfile />,
+},
+{ 
+    title: "Offer" ,
+    icon : <AiFillProfile />,
+},
+{ 
+    title: "Offer ImageUpload" ,
+    icon : <AiFillProfile />,
+},
   {
     title: "Components",
     submenu: [{ title: "Button" }, { title: "Card" }],
