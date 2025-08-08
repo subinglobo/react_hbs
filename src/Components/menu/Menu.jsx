@@ -6,6 +6,8 @@ import { FaLeaf } from "react-icons/fa";
 import { LuLeaf } from "react-icons/lu";
 import { AiFillProfile } from "react-icons/ai";
 import { MdAppRegistration } from "react-icons/md";
+import { FaList } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
 
 const menuItems = [
   {
@@ -141,7 +143,7 @@ const menuItems = [
   },
     {
     title: "New Booking",
-    icon:<MdAppRegistration />,
+    icon:<IoMdAdd  />,
     submenu: [
         {
         title: "Hotel Booking",
@@ -161,6 +163,37 @@ const menuItems = [
         },
         {
         title: "Tours and Activity",
+        icon: <LuLeaf />,
+        },
+              
+    ],
+  },
+      {
+    title: "Booking Details",
+    icon:<FaList  />,
+    submenu: [
+        {
+        title: "Hotel Booking List",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Custom booking List",
+        icon: <LuLeaf />,
+        },
+          {
+        title: "Package Booking List",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Complete Booking ",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Quotation List",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Offline Booking List",
         icon: <LuLeaf />,
         },
               
