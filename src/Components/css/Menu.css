@@ -13,8 +13,9 @@ body {
   background: #ffffff; /* White background */
   border-right: 1px solid #ddd;
   padding: 20px;
-  overflow-y: auto;
+  overflow-y: hidden;
   color: #000; /* Black text */
+   
 }
 
 /* Sidebar Heading */

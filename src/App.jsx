@@ -15,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AgentDashboard from "./Components/dashboards/AgentDashboard";
 import LandingPage from "./Components/dashboards/LandingPage";
 import SelectRole from "./pages/SelectRole";
+import Hotels from "./Components/master/Hotels";
 
 function App() {
   return (
@@ -37,6 +38,16 @@ function App() {
                   <State />
                   <CountryApi />
                   <Destination />
+                </>
+              </PrivateRoute>
+            }
+          />
+           <Route
+            path="/hotels"
+            element={
+              <PrivateRoute>
+                <>
+                  <Hotels />
                 </>
               </PrivateRoute>
             }

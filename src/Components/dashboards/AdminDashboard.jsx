@@ -1,11 +1,14 @@
 import React from 'react'
-import CustomNavbar from '../CustomNavbar';
+import CustomisedNavbar from '../CustomisedNavbar';
+import Sidebar from '../Sidebar';
+
+
 
 const AdminDashboard = () => {
   return (
     <div>
-
-      <CustomNavbar />
+      <Sidebar />
+      <CustomisedNavbar />
       <h1 style={{textAlign : 'center'}}>Welcome Admin</h1>
     </div>
   )

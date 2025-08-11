@@ -8,6 +8,14 @@ import { AiFillProfile } from "react-icons/ai";
 import { MdAppRegistration } from "react-icons/md";
 import { FaList } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import { FaFileInvoice } from "react-icons/fa";
+import { SlCalender } from "react-icons/sl";
+import { TbReportSearch } from "react-icons/tb";
+import { BiSolidOffer } from "react-icons/bi";
+import { IoCloudUploadSharp } from "react-icons/io5";
+import { MdOutlineSupportAgent } from "react-icons/md";
+import { MdAssignmentInd } from "react-icons/md";
+import { IoIosPricetag } from "react-icons/io";
 
 const menuItems = [
   {
@@ -201,31 +209,56 @@ const menuItems = [
   },
    { 
     title: "Invoice" ,
-    icon : <AiFillProfile />,
+    icon : <FaFileInvoice />,
+},
+{ 
+    title: "Inhouse Agents" ,
+    icon : <MdOutlineSupportAgent />,
+        submenu: [
+        {
+        title: "Agent Accounts",
+        icon: <LuLeaf />,
+        },
+        {
+        title: "Payment Gateway Transacations",
+        icon: <LuLeaf />,
+        },
+          {
+        title: "Statement Of Accounts(Online)",
+        icon: <LuLeaf />,
+        },
+       
+              
+    ],
+},
+{ 
+    title: "Assign Agents" ,
+    icon : <MdAssignmentInd />,
 },
 { 
     title: "Calender" ,
-    icon : <AiFillProfile />,
+    icon : <SlCalender />,
 },
 { 
+    title: "Extranet Contractrate" ,
+    icon : <IoIosPricetag />,
+},
+
+{ 
     title: "Report" ,
-    icon : <AiFillProfile />,
+    icon : <TbReportSearch />,
 },
 { 
     title: "Offer" ,
-    icon : <AiFillProfile />,
+    icon : <BiSolidOffer />,
 },
 { 
     title: "Offer ImageUpload" ,
-    icon : <AiFillProfile />,
+    icon : <IoCloudUploadSharp />,
 },
-  {
-    title: "Components",
-    submenu: [{ title: "Button" }, { title: "Card" }],
-  },
-  { title: "Utilities" },
-  { title: "Migrating" },
-  { title: "About" },
+
+
+  
 ];
 
 const Menu = () => {

@@ -10,6 +10,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { redirectToDashboard } from "./RedirectionToDashBoard";
 
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -27,21 +28,34 @@ const Login = () => {
         username: `${username}`,
         password: `${password}`,
       };
-      const response = await axios.post("/auth/login", loginRequest);
+      const response = await axios.post("/auth/login", loginRequest, {
+        withCredentials: true,
+      });
+
       console.log("api login response :", response);
 
       const token = response.data.token;
       const roles = response.data.roles;
+
+      if (!token || !roles) {
+        throw new Error("Invalid response from server: Missing token or roles");
+      }
+     
+     
+      // if (!refreshToken) {
+      //   throw new Error("Refresh token not found in cookies");
+      // }
       localStorage.setItem("authToken", token);
       localStorage.setItem("userRole", roles);
-      console.log("roles::" , roles)
+     
+
       if (roles.length > 1) {
         // Multiple roles - navigate to role selection
-        console.log("navigate to select roles")
+        console.log("navigate to select roles");
         navigate("/select-userRole", { state: { roles } });
       } else {
         // Single role - navigate directly to dashboard
-            redirectToDashboard(roles[0] || "User", navigate);
+        redirectToDashboard(roles[0] || "User", navigate);
       }
 
       //("/adminDashboard");
@@ -87,7 +101,11 @@ const Login = () => {
 
       <div className="main-content-row">
         <div className="col-lg-8">
-          <div id="offerSlider" className="carousel slide mb-4" data-bs-ride="carousel">
+          <div
+            id="offerSlider"
+            className="carousel slide mb-4"
+            data-bs-ride="carousel"
+          >
             <div className="carousel-inner">
               <div className="carousel-item active">
                 <img
@@ -178,13 +196,13 @@ const Login = () => {
         </div>
 
         <div className="login-form">
-          <div class="log">
-							  <img
-                  src={`${process.env.PUBLIC_URL}/images/logo-1.jpg`}
-                  alt="Travel Insurance"
-                  className="img-fluid rounded login-logo"
-                />
-						</div>
+          <div className="log">
+            <img
+              src={`${process.env.PUBLIC_URL}/images/logo-1.jpg`}
+              alt="Travel Insurance"
+              className="img-fluid rounded login-logo"
+            />
+          </div>
           <h3>Sign in</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
