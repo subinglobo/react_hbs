@@ -312,7 +312,7 @@ body {
   background: #f9f9f9;
 }
 
-.container {
+.login-container .container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -390,7 +390,7 @@ body {
   margin-bottom: 20px;
 }
 
-.card {
+.login-container .card {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -399,12 +399,12 @@ body {
   text-align: center;
 }
 
-.card img {
+.login-container .card img {
   width: 120px;
   margin-bottom: 15px;
 }
 
-.card h2 {
+.login-container .card h2 {
   text-align: left;
   color: var(--Gray-100, #090e1d);
   font-size: 19.717px;
@@ -415,7 +415,7 @@ body {
   font-family: "Poppins";
 }
 
-.card p {
+.login-container .card p {
   color: var(--Gray-60, #5d6a85);
   font-size: 13.145px;
   font-style: normal;
@@ -568,7 +568,7 @@ body {
   border-radius: 5px;
 }
 
-.card {
+.login-container .card {
   max-width: 300px;
   margin: 0 auto;
 }
@@ -612,7 +612,7 @@ body {
   text-transform: capitalize;
 }
 
-.card {
+.login-container .card {
   width: 100%;
   max-width: 345px;
   border-radius: 13.145px;

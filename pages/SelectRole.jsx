@@ -45,8 +45,8 @@ const SelectRole = () => {
   };
 
   return (
-    
-    <div className="role-container">
+    <div className="select-role-page">
+      <div className="role-container">
       
       <h1>Select Your Role</h1>
       <div className="role-grid">
@@ -75,6 +75,7 @@ const SelectRole = () => {
           <div className="feature">Customize hover effects</div>
         </div>
       </div> */}
+      </div>
     </div>
   );
 };

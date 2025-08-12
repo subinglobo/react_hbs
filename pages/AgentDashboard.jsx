@@ -5,6 +5,7 @@ import LineChart from '../components/LineChart';
 import BarChart from '../components/BarChart';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import Topbar from '../components/TopBar';
 
 const kpiData = {
   totalBookings: 1245,
@@ -22,9 +23,11 @@ const revenueData = [3000,4800,5500,4000,6800];
 export default function AgentDashboard(){
   const navigate = useNavigate();
   return (
-    <div className="d-flex min-vh-100 bg-light">
-      <Sidebar />
-      <main className="flex-grow-1 p-4">
+    <div className="min-vh-100 bg-light d-flex flex-column">
+      <Topbar />
+      <div className="d-flex flex-grow-1">
+        <Sidebar />
+        <main className="flex-grow-1 p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="h3">Dashboard</h1>
           <div className="d-flex flex-wrap gap-2">
@@ -66,7 +69,8 @@ export default function AgentDashboard(){
             </Col>
           </Row>
         </Container>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

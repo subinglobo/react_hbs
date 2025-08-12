@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/Register.css";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { Card, Form, Row, Col, Button } from "react-bootstrap";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -266,466 +267,343 @@ const Register = () => {
           </div>
         </div>
         <div className="step-pane active" id="step1">
-          <form
-            onSubmit={handleSubmit}
-            method="post"
-            id="registerForm"
-            noValidate
-            autoComplete="off"
-          >
-            <input
-              type="hidden"
-              id="contactDetailsId"
-              name="contactDetailsId"
-              value=""
-            />
-            <div className="unwrap">
-              <div className="panel panel-default">
-                <div className="panel-body">
-                  <div className="row">
-                    <div className="col-xs-12 col-md-12 form-group">
-                      <div className="col-xs-3 col-md-2">
-                        <label className="color-grey">
-                          <span className="required">*</span>Company Name
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-10">
-                        <input
-                          type="text"
-                          className={`form-control company-name ${
-                            errors.companyName ? "error" : ""
-                          }`}
-                          id="companyName"
-                          name="companyName"
-                          value={formData.companyName}
-                          onChange={handleChange}
-                          placeholder="Company Name"
-                        />
-                        <p className="error-text">{errors.companyName || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Business Type
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <input
-                          type="text"
-                          name="businessType"
-                          id="businessType"
-                          value={formData.businessType}
-                          onChange={handleChange}
-                          placeholder="Business Type"
-                          className={`form-control business-type ${
-                            errors.businessType ? "error" : ""
-                          }`}
-                          maxLength={15}
-                          minLength={1}
-                        />
-                        <p className="error-text">
-                          {errors.businessType || ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Company Type
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <select
-                          id="companyType"
-                          name="agentCategoryId"
-                          value={formData.agentCategoryId}
-                          onChange={handleChange}
-                          className={`form-control company-type ${
-                            errors.agentCategoryId ? "error" : ""
-                          }`}
-                        >
-                          <option value="">SELECT</option>
-                          {agentCategoryies.map((agent) => (
-                            <option
-                              key={agent.agentCategoryId}
-                              value={agent.agentCategoryId}
-                            >
-                              {agent.name}
+          <Form onSubmit={handleSubmit} id="registerForm" noValidate autoComplete="off">
+            <Card className="rounded-xl shadow-sm">
+              <Card.Body>
+                <Row className="g-3">
+                  <Col xs={12}>
+                    <Form.Group controlId="companyName">
+                      <Form.Label>
+                        <span className="required">*</span> Company Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        placeholder="Enter company name"
+                        className={errors.companyName ? "error" : ""}
+                      />
+                      <Form.Text className="text-danger">{errors.companyName || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="businessType">
+                      <Form.Label>
+                        <span className="required">*</span> Business Type
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="businessType"
+                        value={formData.businessType}
+                        onChange={handleChange}
+                        placeholder="e.g. Travel Agency"
+                        className={errors.businessType ? "error" : ""}
+                        maxLength={15}
+                      />
+                      <Form.Text className="text-danger">{errors.businessType || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="companyType">
+                      <Form.Label>
+                        <span className="required">*</span> Company Type
+                      </Form.Label>
+                      <Form.Select
+                        name="agentCategoryId"
+                        value={formData.agentCategoryId}
+                        onChange={handleChange}
+                        className={errors.agentCategoryId ? "error" : ""}
+                      >
+                        <option value="">SELECT</option>
+                        {agentCategoryies.map((agent) => (
+                          <option key={agent.agentCategoryId} value={agent.agentCategoryId}>
+                            {agent.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Text className="text-danger">{errors.companyType || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="firstName">
+                      <Form.Label>
+                        <span className="required">*</span> First Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        placeholder="First name"
+                        className={errors.firstName ? "error" : ""}
+                        maxLength={15}
+                      />
+                      <Form.Text className="text-danger">{errors.firstName || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="lastName">
+                      <Form.Label>
+                        <span className="required">*</span> Last Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        placeholder="Last name"
+                        className={errors.lastName ? "error" : ""}
+                        maxLength={15}
+                      />
+                      <Form.Text className="text-danger">{errors.lastName || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="mobileNo">
+                      <Form.Label>
+                        <span className="required">*</span> Mobile Number
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="mobileNumber"
+                        value={formData.mobileNumber}
+                        onChange={handleChange}
+                        placeholder="10-15 digits"
+                        className={errors.mobileNumber ? "error" : ""}
+                        maxLength={10}
+                      />
+                      <Form.Text className="text-danger">{errors.mobileNumber || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group controlId="mailId">
+                      <Form.Label>
+                        <span className="required">*</span> Email
+                      </Form.Label>
+                      <Form.Control
+                        type="email"
+                        name="personalEmail"
+                        value={formData.personalEmail}
+                        onChange={handleChange}
+                        placeholder="name@company.com"
+                        className={errors.personalEmail ? "error" : ""}
+                      />
+                      <Form.Text className="text-danger">{errors.personalEmail || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Group controlId="country">
+                      <Form.Label>
+                        <span className="required">*</span> Country
+                      </Form.Label>
+                      <Form.Select
+                        name="countryId"
+                        value={formData.countryId}
+                        onChange={handleChange}
+                        className={errors.countryId ? "error" : ""}
+                      >
+                        <option value="">SELECT</option>
+                        {countries.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Text className="text-danger">{errors.countryId || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Group controlId="province">
+                      <Form.Label>
+                        <span className="required">*</span> Province
+                      </Form.Label>
+                      <Form.Select
+                        name="provinceId"
+                        value={formData.provinceId}
+                        onChange={handleChange}
+                        disabled={!formData.countryId}
+                        className={errors.provinceId ? "error" : ""}
+                      >
+                        <option value="">SELECT</option>
+                        {Array.isArray(provinces) &&
+                          provinces.map((province) => (
+                            <option key={province.id} value={province.id}>
+                              {province.stateName}
                             </option>
                           ))}
-                        </select>
-                        <p className="error-text">{errors.companyType || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-12 form-group">
-                      <div className="col-xs-3 col-md-2">
-                        <label className="color-grey text-nowrap">
-                          <span className="required">*</span>Authorized Person
-                        </label>
-                      </div>
-                      <div className="col-xs-12 col-md-5">
-                        <input
-                          type="text"
-                          name="firstName"
-                          id="firstName"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          placeholder="First Name"
-                          className={`form-control first-name ${
-                            errors.firstName ? "error" : ""
-                          }`}
-                          maxLength={15}
-                          minLength={1}
-                        />
-                        <p className="error-text">{errors.firstName || ""}</p>
-                      </div>
-                      <div className="col-xs-12 col-md-5">
-                        <input
-                          type="text"
-                          name="lastName"
-                          id="lastName"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          placeholder="Last Name"
-                          className={`form-control last-name ${
-                            errors.lastName ? "error" : ""
-                          }`}
-                          maxLength={15}
-                          minLength={1}
-                        />
-                        <p className="error-text">{errors.lastName || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Mobile Number
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <input
-                          type="text"
-                          className={`form-control mobile-no ${
-                            errors.mobileNumber ? "error" : ""
-                          }`}
-                          id="mobileNo"
-                          name="mobileNumber"
-                          maxLength={10}
-                          value={formData.mobileNumber}
-                          onChange={handleChange}
-                          placeholder="Mobile No"
-                        />
-                        <p className="error-text">
-                          {errors.mobileNumber || ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Mail Id
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <input
-                          type="email"
-                          className={`form-control mail-id ${
-                            errors.personalEmail ? "error" : ""
-                          }`}
-                          id="mailId"
-                          name="personalEmail"
-                          value={formData.personalEmail}
-                          onChange={handleChange}
-                          placeholder="Enter EmailId"
-                        />
-                        <p className="error-text">{errors.personalEmail}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Country
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <select
-                          id="country"
-                          name="countryId"
-                          value={formData.countryId}
-                          onChange={handleChange}
-                          className={`form-control country ${
-                            errors.countryId ? "error" : ""
-                          }`}
-                        >
-                          <option value="">SELECT</option>
-                          {countries.map((country) => (
-                            <option key={country.id} value={country.id}>
-                              {country.name}
+                      </Form.Select>
+                      <Form.Text className="text-danger">{errors.provinceId || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Group controlId="city">
+                      <Form.Label>
+                        <span className="required">*</span> City
+                      </Form.Label>
+                      <Form.Select
+                        name="placeId"
+                        value={formData.placeId}
+                        onChange={handleChange}
+                        disabled={!formData.provinceId}
+                        className={errors.placeId ? "error" : ""}
+                      >
+                        <option value="">SELECT</option>
+                        {Array.isArray(places) &&
+                          places.map((place) => (
+                            <option key={place.id} value={place.id}>
+                              {place.name}
                             </option>
                           ))}
-                        </select>
-                        <p className="error-text">{errors.countryId || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Province
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <select
-                          id="province"
-                          name="provinceId"
-                          value={formData.provinceId}
-                          onChange={handleChange}
-                          className={`form-control province ${
-                            errors.provinceId ? "error" : ""
-                          }`}
-                          disabled={!formData.countryId}
-                        >
-                          <option value="">SELECT</option>
-                          {Array.isArray(provinces) &&
-                            provinces.map((province) => (
-                              <option key={province.id} value={province.id}>
-                                {province.stateName}
-                              </option>
-                            ))}
-                        </select>
-                        <p className="error-text">{errors.provinceId || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>City
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <select
-                          id="city"
-                          name="placeId"
-                          value={formData.placeId}
-                          onChange={handleChange}
-                          className={`form-control city ${
-                            errors.placeId ? "error" : ""
-                          }`}
-                          disabled={!formData.provinceId}
-                        >
-                          <option value="">SELECT</option>
-                          {Array.isArray(places) &&
-                            places.map((place) => (
-                              <option key={place.id} value={place.id}>
-                                {place.name}
-                              </option>
-                            ))}
-                        </select>
-                        <p className="error-text">{errors.placeId || ""}</p>
-                      </div>
-                    </div>
-                    <div className="col-xs-12 col-md-6 form-group">
-                      <div className="col-xs-3 col-md-4">
-                        <label className="color-grey">
-                          <span className="required">*</span>Address
-                        </label>
-                      </div>
-                      <div className="col-xs-6 col-md-8">
-                        <textarea
-                          rows="2"
-                          name="address"
-                          id="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          placeholder="Enter Address"
-                          className={`form-control address ${
-                            errors.address ? "error" : ""
-                          }`}
-                        ></textarea>
-                        <p className="error-text">{errors.address || ""}</p>
-                      </div>
-                    </div>
-                    <div
-                      className="col-xs-12 agent-detail"
-                      hidden={formData.countryId !== "1"}
-                    >
-                      <div className="row">
-                        <div className="col-xs-12">
-                          <div className="col-xs-12">
-                            <h4 className="gst-title">Agency GST Details</h4>
-                          </div>
-                        </div>
-                        <div className="clearfix"></div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
-                              Agency Classification
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <select
-                              id="classification"
+                      </Form.Select>
+                      <Form.Text className="text-danger">{errors.placeId || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col xs={12}>
+                    <Form.Group controlId="address">
+                      <Form.Label>
+                        <span className="required">*</span> Address
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        placeholder="Enter address"
+                        className={errors.address ? "error" : ""}
+                      />
+                      <Form.Text className="text-danger">{errors.address || ""}</Form.Text>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                {/* GST section (India) */}
+                {formData.countryId === "1" && (
+                  <Card className="mt-4">
+                    <Card.Header className="fw-semibold">Agency GST Details</Card.Header>
+                    <Card.Body>
+                      <Row className="g-3">
+                        <Col md={6}>
+                          <Form.Group controlId="classification">
+                            <Form.Label>Agency Classification</Form.Label>
+                            <Form.Select
                               name="classification"
                               value={formData.classification}
                               onChange={handleChange}
-                              className="form-control classification"
                             >
                               <option value="registered">Registered</option>
                               <option value="unregistered">Unregistered</option>
-                            </select>
-                            <input
-                              type="hidden"
-                              id="gstInid"
-                              name="gstInid"
-                              value=""
-                            />
-                          </div>
-                        </div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="gstin">
+                            <Form.Label>
                               <span className="required">*</span> Agency GSTIN
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <input
+                            </Form.Label>
+                            <Form.Control
                               type="text"
                               name="agentGstIn"
-                              id="gstin"
                               value={formData.agentGstIn}
                               onChange={handleChange}
                               placeholder="Agency GSTIN"
-                              className={`form-control gstin ${
-                                errors.agentGstIn ? "error" : ""
-                              }`}
+                              className={errors.agentGstIn ? "error" : ""}
                               maxLength={30}
-                              minLength={1}
                             />
-                            <p className="error-text">
-                              {errors.agentGstIn || ""}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="clearfix"></div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
-                              Provisional GST NO
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <input
+                            <Form.Text className="text-danger">{errors.agentGstIn || ""}</Form.Text>
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="provisionalGSTno">
+                            <Form.Label>Provisional GST NO</Form.Label>
+                            <Form.Control
                               type="text"
                               name="provisionalGSTno"
-                              id="provisionalGSTno"
                               value={formData.provisionalGSTno}
                               onChange={handleChange}
                               placeholder="Provisional GST No"
-                              className="form-control provisional-gst-no"
                               maxLength={30}
-                              minLength={1}
                             />
-                          </div>
-                        </div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
-                              Correspondence Mail ID
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <input
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="corrsmailid">
+                            <Form.Label>Correspondence Mail ID</Form.Label>
+                            <Form.Control
                               type="text"
                               name="corrsmailid"
-                              id="corrsmailid"
                               value={formData.corrsmailid}
                               onChange={handleChange}
                               placeholder="Correspondence Mail ID"
-                              className={`form-control corrs-mail-id ${
-                                errors.corrsmailid ? "error" : ""
-                              }`}
+                              className={errors.corrsmailid ? "error" : ""}
                               maxLength={30}
-                              minLength={1}
                             />
-                            <p className="error-text">
-                              {errors.corrsmailid || ""}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
-                              GST Registration Status
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <input
+                            <Form.Text className="text-danger">{errors.corrsmailid || ""}</Form.Text>
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="regstatus">
+                            <Form.Label>GST Registration Status</Form.Label>
+                            <Form.Control
                               type="text"
                               name="regstatus"
-                              id="regstatus"
                               value={formData.regstatus}
                               onChange={handleChange}
                               placeholder="GST Registration Status"
-                              className="form-control reg-status"
                               maxLength={30}
-                              minLength={1}
                             />
-                          </div>
-                        </div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">HSN/SAC Code</label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <input
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="hacCode">
+                            <Form.Label>HSN/SAC Code</Form.Label>
+                            <Form.Control
                               type="text"
                               name="hacCode"
-                              id="hacCode"
                               value={formData.hacCode}
                               onChange={handleChange}
                               placeholder="HSN/SAC Code"
-                              className="form-control hac-code"
                               maxLength={30}
-                              minLength={1}
                             />
-                          </div>
-                        </div>
-                        <div className="col-xs-12 col-md-6 form-group">
-                          <div className="col-xs-3 col-md-4">
-                            <label className="color-grey">
-                              Composition Levy as per Section 10 of GST
-                            </label>
-                          </div>
-                          <div className="col-xs-6 col-md-8">
-                            <select
-                              id="type"
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="type">
+                            <Form.Label>Composition Levy as per Section 10 of GST</Form.Label>
+                            <Form.Select
                               name="type"
                               value={formData.type}
                               onChange={handleChange}
-                              className="form-control type"
                             >
                               <option value="yes">Yes</option>
                               <option value="no">No</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                )}
+
+                <div className="wizard-actions save mt-4">
+                  <Button type="submit" variant="warning" className="px-4" id="createRegisterForm">
+                    Create
+                  </Button>
                 </div>
-              </div>
-            </div>
-            <div className="wizard-actions save">
-              <button
-                type="submit"
-                className="btn-block btn btn-warning"
-                id="createRegisterForm"
-              >
-                Create{" "}
-                <i className="ace-icon fa fa-arrow-right icon-on-right"></i>
-              </button>
-            </div>
-          </form>
+              </Card.Body>
+            </Card>
+          </Form>
         </div>
       </div>
     </div>

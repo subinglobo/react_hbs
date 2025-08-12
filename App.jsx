@@ -13,6 +13,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import Test from "./pages/Test";
 import LandingPage from "./pages/LandingPage";
+import { Toaster } from "react-hot-toast";
+import Designations from "./pages/master/Designation";
 
 
 export default function App() {
@@ -82,6 +84,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route path='/masters/designations' element={<Designations />} />
           
       </Routes>
 

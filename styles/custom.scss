@@ -19,6 +19,30 @@ body{
   background: $bg-gray-100;
 }
 
+/* Topbar */
+.topbar{
+  height: 60px;
+}
+.logo-placeholder{
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.profile-toggle:hover{
+  opacity: .9;
+}
+
+/* Ensure layout places sidebar under topbar on small and large screens */
+.topbar + .d-flex .sidebar{
+  /* no change needed; this selector ensures specificity if required later */
+}
+
 /* Sidebar */
 .sidebar{
   width: 16rem;
@@ -28,21 +52,82 @@ body{
   display: flex;
   flex-direction: column;
 }
-.sidebar .brand{
-  font-size: 1.25rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 1rem;
-}
+/* Removed sidebar brand heading per request */
 .nav-item-custom .nav-link{
   padding: .5rem .75rem;
   border-radius: .75rem;
   margin-bottom: 0.35rem;
   color: #111827;
+  font-size: 1rem; /* base size for top-level items */
 }
 .nav-item-custom .nav-link:hover{
   background: #f3f4f6;
   text-decoration: none;
+}
+
+/* Submenu */
+.nav-item-has-children{
+  position: relative;
+}
+.nav-item-has-children .submenu{
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  min-width: 12rem;
+  background: #fff;
+  border-radius: .5rem;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.08);
+  padding: .25rem;
+  z-index: 1000;
+}
+.nav-item-has-children:hover > .submenu{
+  display: block;
+}
+.submenu .submenu-link{
+  display: block;
+  padding: .5rem .75rem;
+  color: #111827;
+  border-radius: .5rem;
+  font-size: .875rem; /* one size smaller than group header */
+  position: relative;
+}
+.submenu .submenu-link:hover{
+  background: #f3f4f6;
+  text-decoration: none;
+}
+
+/* Accordion groups inside submenu */
+.submenu-group{ padding: .25rem; }
+.submenu-accordion-header{
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: .5rem .5rem;
+  border-radius: .5rem;
+  text-align: left;
+  font-size: .95rem; /* one size smaller than top-level item */
+}
+.submenu-accordion-header:hover{ background: #f3f4f6; }
+.submenu-children{ padding-left: .5rem; }
+.caret-small{ font-size: .8rem; }
+
+/* Icon appears on hover before only second-level leaf submenu labels */
+.submenu-children .submenu-link::before{
+  content: '';
+  position: absolute;
+  left: .75rem;
+  opacity: 0;
+  transition: opacity .15s ease-in-out;
+}
+.submenu-children .submenu-link:hover::before{
+  content: '→';
+  opacity: 1;
+}
+
+/* Extra left space for sub-sub menus like Designation */
+.submenu-children .submenu-link{
+  padding-left: 1.75rem;
 }
 
 /* Buttons matching Tailwind palette */
@@ -72,4 +157,12 @@ body{
 /* Responsiveness */
 @media (max-width: 991px){
   .sidebar{ display: none; }
+  /* Mobile: show submenu stacked under parent */
+  .nav-item-has-children .submenu{
+    position: static;
+    display: block;
+    box-shadow: none;
+    padding-left: 1.5rem;
+    background: transparent;
+  }
 }
