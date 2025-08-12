@@ -1,113 +1,182 @@
-/* Dashboard Wrapper */
-.dashboard {
-  display: flex;
-  margin-top: 60px; /* Space for CustomNavbar */
-  height: calc(100vh - 60px);
-  width: 100%;
-  background-color: #f5f6fa;
-  font-family: 'Segoe UI', sans-serif;
+/* =======================
+   GLOBAL RESET & BASICS
+======================= */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f5f6fa;
+    margin: 0;
+    color: #333;
 }
 
-/* Sidebar Menu */
-.menu-container {
-  width: 240px;
-  background: #fff;
-  border-right: 1px solid #e5e7eb;
-  padding: 20px 0;
-  position: fixed;
-  top: 60px; /* Below navbar */
-  left: 0;
-  height: calc(100vh - 60px);
-  overflow-y: auto;
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
-.menu-container::-webkit-scrollbar {
-  display: none;
+a:hover {
+    color: #007bff;
 }
 
-/* Main Content */
+/* =======================
+   SIDEBAR
+======================= */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 230px;
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    padding-top: 60px;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar .nav li {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar .nav li:hover,
+.sidebar .nav li.active {
+    background: #f0f2f5;
+    border-left: 4px solid #007bff;
+}
+
+/* Sidebar Icons */
+.sidebar .nav li i {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+/* =======================
+   HEADER
+======================= */
+.header {
+    position: fixed;
+    top: 0;
+    left: 230px;
+    right: 0;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+/* Profile Section */
+.header .profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.header .profile img {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+}
+
+/* =======================
+   MAIN CONTENT
+======================= */
 .main-content {
-  flex: 1;
-  margin-left: 240px; /* Space for sidebar */
-  padding: 20px;
-  min-height: calc(100vh - 60px);
+    margin-left: 230px;
+    padding: 80px 20px 20px 20px;
 }
 
-/* Stat Cards */
-.stat-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* =======================
+   STAT CARDS
+======================= */
+.card {
+    border: none;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s ease;
 }
 
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+.card:hover {
+    transform: translateY(-2px);
 }
 
-.stat-card .label {
-  font-size: 14px;
-  color: #6b7280;
+.card h5 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #555;
 }
 
-.stat-card .value {
-  font-size: 20px;
-  font-weight: 600;
-  margin-top: 4px;
-  color: #111827;
+.card .value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #000;
+    margin-top: 8px;
 }
 
-/* Chart Cards */
-.chart-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+/* =======================
+   TABLES
+======================= */
+.table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-/* Layout Wrappers */
-.stats-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 25px;
+.table thead {
+    background: #f8f9fa;
+    font-weight: bold;
 }
 
-.charts-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+.table th, .table td {
+    padding: 12px 15px;
+    vertical-align: middle;
 }
 
-/* Action Buttons */
-.btn-add-hotel,
-.btn-add-agent {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.2s ease-in-out;
+/* =======================
+   CHARTS SECTION
+======================= */
+.chart-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
-.btn-add-hotel {
-  background: #4f46e5;
-  color: #fff;
-  margin-right: 8px;
-}
+/* =======================
+   RESPONSIVE
+======================= */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 60px;
+    }
 
-.btn-add-hotel:hover {
-  background: #4338ca;
-}
+    .header {
+        left: 60px;
+    }
 
-.btn-add-agent {
-  background: #10b981;
-  color: #fff;
-}
+    .main-content {
+        margin-left: 60px;
+    }
 
-.btn-add-agent:hover {
-  background: #059669;
+    .sidebar .nav li span {
+        display: none;
+    }
 }

@@ -16,6 +16,7 @@ import AgentDashboard from "./Components/dashboards/AgentDashboard";
 import LandingPage from "./Components/dashboards/LandingPage";
 import SelectRole from "./pages/SelectRole";
 import Hotels from "./Components/master/Hotels";
+import StaffDashboard from "./Components/dashboards/StaffDashboard";
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AgentDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/staffDashboard"
+            element={
+              <PrivateRoute>
+                <StaffDashboard />
               </PrivateRoute>
             }
           />

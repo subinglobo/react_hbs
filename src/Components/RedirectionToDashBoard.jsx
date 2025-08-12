@@ -4,7 +4,7 @@ export const redirectToDashboard = (role, navigate) => {
   const dashboards = {
     "ADMIN": "/adminDashboard",
     "AGENT": "/agentDashboard",
-    // "User": "/user-dashboard",
+    "STAFF": "/staffDashboard",
     // Add more roles as needed
   };
 

@@ -281,7 +281,7 @@ const Menu = () => {
         className="sidebar bg-white text-white p-3"
         style={{ width: "250px", minHeight: "100vh" }}
       >
-        <h2 className="sidebar-heading mb-4">Hotel Booking System</h2>
+        {/* <h2 className="sidebar-heading mb-4">Hotel Booking System</h2> */}
 
         <ul className="list-unstyled">
           {menuItems.map((menu, i) => (
