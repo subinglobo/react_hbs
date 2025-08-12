@@ -1,0 +1,75 @@
+
+@import "~bootstrap/scss/bootstrap";
+
+$indigo-500: #6366f1;
+$green-500: #10b981;
+$yellow-500: #f59e0b;
+$blue-500: #3b82f6;
+$pink-500: #ec4899;
+$purple-500: #8b5cf6;
+$bg-gray-100: #f3f4f6;
+
+/* Override Bootstrap variables if needed */
+:root{
+  --bs-primary: #6366f1;
+}
+
+/* Layout */
+body{
+  background: $bg-gray-100;
+}
+
+/* Sidebar */
+.sidebar{
+  width: 16rem;
+  background: #fff;
+  padding: 1.25rem;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+}
+.sidebar .brand{
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.nav-item-custom .nav-link{
+  padding: .5rem .75rem;
+  border-radius: .75rem;
+  margin-bottom: 0.35rem;
+  color: #111827;
+}
+.nav-item-custom .nav-link:hover{
+  background: #f3f4f6;
+  text-decoration: none;
+}
+
+/* Buttons matching Tailwind palette */
+.btn-indigo{ background: $indigo-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+.btn-green{ background: $green-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+.btn-yellow{ background: $yellow-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+.btn-blue{ background: $blue-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+.btn-pink{ background: $pink-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+.btn-purple{ background: $purple-500; color: white; border-radius: .75rem; padding: .5rem .9rem; }
+
+/* Cards */
+.rounded-xl{ border-radius: 1rem !important; }
+.shadow{ box-shadow: 0 4px 6px rgba(0,0,0,0.06); }
+.shadow-sm{ box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+
+/* Utility tweaks */
+.hamburger{
+  font-size: 1.25rem;
+  margin: .5rem;
+}
+
+/* Ensure offcanvas closes nicely */
+.offcanvas{
+  width: 16rem;
+}
+
+/* Responsiveness */
+@media (max-width: 991px){
+  .sidebar{ display: none; }
+}
