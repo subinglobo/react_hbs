@@ -26,16 +26,49 @@ export default function Designations() {
   const openCreate = () => {
     setEditing(null);
     setName("");
+    setError("");
     setShowModal(true);
   };
 
-  const openEdit = (item) => {
+    const openEdit = (item) => {
     setEditing(item);
     setName(item.name);
     setShowModal(true);
   };
 
-  const closeModal = () => setShowModal(false);
+  const handleEdit = async () => {
+    if (!editing) return;
+    
+    try {
+      setIsLoading(true);
+      const editRes = await axiosInstance.put(`/api/designation/${editing.designationId}`, {
+        name: name
+      });
+
+      console.log("editRes::" , editRes)
+      
+      if (editRes.data) {
+        toast.success("Designation Updated Successfully!");
+        // First refresh the list
+        await fetchDesignationList(page, search);
+        // Then close modal and reset state
+        closeModal();
+      }
+    } catch (error) {
+      console.error("Edit error:", error);
+      setError("Failed to update designation");
+      toast.error("Failed to update designation");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setName("");
+    setError("");
+  };
 
   const fetchDesignationList = async (pageNum = 0, searchTerm = search) => {
     setIsLoading(true);
@@ -49,11 +82,14 @@ export default function Designations() {
         params.append('search', searchTerm.trim());
       }
       
+      console.log("Fetching designations with params:", params.toString());
       const res = await axiosInstance.get(`/api/designation?${params.toString()}`);
+      console.log("Designations response:", res.data);
       
       // Check if response has data and pagination info
       if (res.data && Array.isArray(res.data)) {
         setItems(res.data);
+        console.log("Updated items state:", res.data);
         
         // Since backend doesn't return totalPages, we'll calculate it based on data length
         // If we get less than 10 items, it's likely the last page
@@ -84,24 +120,36 @@ export default function Designations() {
 
   const saveDesignation = async () => {
     try {
+      setIsLoading(true);
       const desigSaveRequest = { name: `${name}` };
       const desigSavedData = await axiosInstance.post(
         "/api/designation/saveDesignation",
         desigSaveRequest
       );
       if (desigSavedData.data !== 0) {
-        closeModal();
         toast.success("Designation added Successfully!");
-        fetchDesignationList(page, search); // refresh current page
+        // First refresh the list
+        await fetchDesignationList(page, search);
+        // Then close modal
+        closeModal();
       }
     } catch (error) {
+      console.error("Save error:", error);
       setError("Sorry! Data not saved to db..");
+      toast.error("Failed to save designation");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchDesignationList();
   }, []);
+
+  // Debug: Log when items change
+  useEffect(() => {
+    console.log("Items state updated:", items);
+  }, [items]);
 
   // Debounced search effect
   useEffect(() => {
@@ -230,13 +278,13 @@ export default function Designations() {
                       <td>{item.name}</td>
                       <td>
                         <div className="d-flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() => openEdit(item)}
-                          >
-                            Edit
-                          </Button>
+                                                     <Button
+                             size="sm"
+                             variant="outline-primary"
+                             onClick={() => openEdit(item)}
+                           >
+                             Edit
+                           </Button>
                           <Button
                             size="sm"
                             variant="outline-danger"
@@ -302,34 +350,51 @@ export default function Designations() {
             </Card.Body>
           </Card>
 
-          <Modal show={showModal} onHide={closeModal} centered>
-            <Modal.Header closeButton>
-              <Modal.Title>
-                {editing ? "Edit Designation" : "Create Designation"}
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Form onSubmit={saveDesignation}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Designation Name</Form.Label>
-                  <Form.Control
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter designation name"
-                    autoFocus
-                  />
-                </Form.Group>
-              </Form>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button className="btn-indigo" onClick={saveDesignation}>
-                Save
-              </Button>
-            </Modal.Footer>
-          </Modal>
+                     <Modal show={showModal} onHide={closeModal} centered>
+             <Modal.Header closeButton={!isLoading}>
+               <Modal.Title>
+                 {editing ? "Edit Designation" : "Create Designation"}
+               </Modal.Title>
+             </Modal.Header>
+             <Modal.Body>
+               <Form>
+                 <Form.Group className="mb-3">
+                   <Form.Label>Designation Name</Form.Label>
+                   <Form.Control
+                     value={name}
+                     onChange={(e) => setName(e.target.value)}
+                     placeholder="Enter designation name"
+                     autoFocus
+                     isInvalid={!!error}
+                   />
+                   {error && (
+                     <Form.Control.Feedback type="invalid">
+                       {error}
+                     </Form.Control.Feedback>
+                   )}
+                 </Form.Group>
+               </Form>
+             </Modal.Body>
+             <Modal.Footer>
+               <Button variant="secondary" onClick={closeModal} disabled={isLoading}>
+                 Cancel
+               </Button>
+               <Button 
+                 className="btn-indigo" 
+                 onClick={editing ? handleEdit : saveDesignation}
+                 disabled={isLoading}
+               >
+                 {isLoading ? (
+                   <>
+                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                     {editing ? "Updating..." : "Saving..."}
+                   </>
+                 ) : (
+                   editing ? "Update" : "Save"
+                 )}
+               </Button>
+             </Modal.Footer>
+           </Modal>
         </main>
       </div>
     </div>
