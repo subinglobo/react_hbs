@@ -4,8 +4,11 @@ import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/TopBar';
 
 export default function Designations(){
-  
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState([
+    { id: 1, name: 'Sales Executive' },
+    { id: 2, name: 'Senior Sales Executive' },
+    { id: 3, name: 'Operations Manager' },
+  ]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');

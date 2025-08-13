@@ -18,7 +18,6 @@ import Designations from "./pages/master/Designation";
 import HotelSearch from "./pages/HotelSearch";
 import HotelbookingList from "./pages/list/HotelbookingList";
 
-
 export default function App() {
   return (
     <div>
@@ -28,106 +27,107 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/agentDashboard" element={<AgentDashboard />} />
         {/* Protected Routes */}
-        <Route path="/states" element={
-          <PrivateRoute>
+        <Route
+          path="/states"
+          element={
+            <PrivateRoute>
               <>
                 <State />
                 <Country />
                 <Destination />
               </>
-          </PrivateRoute>} />
-         <Route
-            path="/hotels"
-            element={
-              <PrivateRoute>
-                <>
-                  <Hotels />
-                </>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/adminDashboard"
-            element={
-              <PrivateRoute>
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-           <Route
-            path="/agentDashboard"
-            element={
-              <PrivateRoute>
-                <AgentDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/booking-details/hotel-booking-list"
-            element={
-              <PrivateRoute>
-                <HotelbookingList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/staffDashboard"
-            element={
-              <PrivateRoute>
-                <StaffDashboard />
-              </PrivateRoute>
-            }
-          />
-           <Route
-            path="/landingPage"
-            element={
-              <PrivateRoute>
-                <LandingPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/test"
-            element={
-              <PrivateRoute>
-                <Test />
-              </PrivateRoute>
-            }
-          />
-          <Route path='/masters/designations' element={<Designations />} />
-           <Route path='/new-booking/hotel' element={<HotelSearch />} />
-          
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/hotels"
+          element={
+            <PrivateRoute>
+              <>
+                <Hotels />
+              </>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/adminDashboard"
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/agentDashboard"
+          element={
+            <PrivateRoute>
+              <AgentDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/booking-details/hotel-booking-list"
+          element={
+            <PrivateRoute>
+              <HotelbookingList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/staffDashboard"
+          element={
+            <PrivateRoute>
+              <StaffDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/landingPage"
+          element={
+            <PrivateRoute>
+              <LandingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/test"
+          element={
+            <PrivateRoute>
+              <Test />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/masters/designations" element={<Designations />} />
+        <Route path="/new-booking/hotel" element={<HotelSearch />} />
+        <Route path="/masters/destination" element={<Destination />} />
       </Routes>
 
-
-
-
-        {/* Toast container */}
+      {/* Toast container */}
       <Toaster
         // position="top-center"
-         containerStyle={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+        containerStyle={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
         }}
         toastOptions={{
           duration: 5000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
           },
           success: {
             duration: 5000,
             iconTheme: {
-              primary: '#4bb543',
-              secondary: '#fff',
+              primary: "#4bb543",
+              secondary: "#fff",
             },
           },
           error: {
             duration: 6000,
             iconTheme: {
-              primary: '#ff3333',
-              secondary: '#fff',
+              primary: "#ff3333",
+              secondary: "#fff",
             },
           },
         }}
