@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Table, Badge, InputGroup, Pagination } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import TopBar from '../../components/TopBar';
-
 // Demo rows – replace with API data later
 const demoRows = Array.from({ length: 20 }, (_, i) => {
   const index = i + 1;
@@ -20,17 +19,14 @@ const demoRows = Array.from({ length: 20 }, (_, i) => {
     notification: 'Not Confirmed',
   };
 });
-
 const PER_PAGE_OPTIONS = [10, 25, 50];
-
 function getCurrentMonthValue(){
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   return `${y}-${m}`;
 }
-
-export default function HotelbookingList() {
+export default function HotelBookingList() {
   const [status, setStatus] = useState('upcoming');
   const [period, setPeriod] = useState(getCurrentMonthValue());
   const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -39,18 +35,15 @@ export default function HotelbookingList() {
   const [searchInput, setSearchInput] = useState('');
   const [perPage, setPerPage] = useState(PER_PAGE_OPTIONS[0]);
   const [page, setPage] = useState(1);
-
   // When year or month changes, update period (YYYY-MM)
   useEffect(() => {
     setPeriod(`${year}-${month}`);
   }, [year, month]);
-
   // Debounce search input
   useEffect(() => {
     const id = setTimeout(() => setQuery(searchInput.trim()), 300);
     return () => clearTimeout(id);
   }, [searchInput]);
-
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const base = demoRows; // In real case, filter by status/period server-side
@@ -68,11 +61,9 @@ export default function HotelbookingList() {
         .includes(normalized)
     );
   }, [query, status, period]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const currentPage = Math.min(page, totalPages);
   const pagedRows = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
-
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
       <TopBar />
@@ -88,7 +79,6 @@ export default function HotelbookingList() {
                 <Button className="btn-indigo">New</Button>
               </Col>
             </Row>
-
             <Card className="shadow-sm mb-3">
               <Card.Header className="fw-semibold">List of Bookings</Card.Header>
               <Card.Body>
@@ -132,13 +122,11 @@ export default function HotelbookingList() {
                           )}
                         </InputGroup>
                       </div>
-                      
                     </div>
                   </Col>
                 </Row>
               </Card.Body>
             </Card>
-
             <Card className="shadow-sm">
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-3">
@@ -160,7 +148,6 @@ export default function HotelbookingList() {
                     <span className="text-muted">records</span>
                   </div>
                 </div>
-
                 <div className="table-responsive">
                   <Table hover bordered className="align-middle booking-table">
                     <thead className="table-light">
@@ -204,7 +191,7 @@ export default function HotelbookingList() {
                              <button type="button" className="icon-action" title="Delete" aria-label="Delete booking">
                               <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 20 20"  fill="currentColor"
                               className="w-4 h-4">
-                              <path fillRule="evenodd" 
+                              <path fillRule="evenodd"
                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 100 2h.293l.853 10.24A2 2 0 007.138 18h5.724a2 2 0 001.992-1.76L15.707 6H16a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zm-3.707 4l.833 10h7.748l.833-10H5.293z"
                             clipRule="evenodd" />
                             </svg>
@@ -215,7 +202,6 @@ export default function HotelbookingList() {
                     </tbody>
                   </Table>
                 </div>
-
                 <div className="d-flex justify-content-between align-items-center mt-3">
                   <div className="text-muted small">
                     Showing {(currentPage - 1) * perPage + 1} to {Math.min(currentPage * perPage, filtered.length)} of {filtered.length} entries
@@ -238,5 +224,3 @@ export default function HotelbookingList() {
     </div>
   );
 }
-
-

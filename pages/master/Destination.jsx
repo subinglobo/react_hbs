@@ -55,7 +55,11 @@ export default function Destination(){
 
   const saveDestination = async () => {
     if (!country.trim() || !stateName.trim() || !name.trim()) return;
-    const payload = { country: country.trim(), state: stateName.trim(), name: name.trim() };
+    const payload = { 
+       country: country.trim(),
+       state: stateName.trim(), 
+       name: name.trim() 
+    };
     setSaving(true);
     try {
       if (editing && editing.id != null) {
