@@ -81,6 +81,14 @@ body{
   padding: .25rem;
   z-index: 1000;
 }
+
+/* Open submenu upwards */
+.nav-item-has-children.submenu-up .submenu {
+  top: auto;
+  bottom: 0;
+  transform: translateY(-100%);
+}
+
 .nav-item-has-children:hover > .submenu{
   display: block;
 }
@@ -166,3 +174,66 @@ body{
     background: transparent;
   }
 }
+
+/* Hotel Search optimizations */
+.img-cover{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.skeleton{ background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+@keyframes shimmer{ 0%{ background-position: 100% 0; } 100%{ background-position: -100% 0; } }
+.img-loading{ opacity: 0; transition: opacity .2s ease-in; }
+.img-loaded{ opacity: 1; transition: opacity .2s ease-in; }
+
+/* Search form tweaks */
+.rooms-summary-btn{ padding: .625rem .75rem; border-radius: .75rem; background-color: #fff; }
+
+/* Centered search card style */
+.search-card{ max-width: 1200px; margin: 0 auto 1.25rem; }
+.lazy-card{ contain: content; }
+
+/* Stylized date inputs */
+.input-with-icon{ }
+.input-with-icon .icon-left{ position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.input-with-icon .date-control{ padding-left: 2rem; border-radius: .75rem; }
+
+/* Big centered search button */
+.btn-search-large{ background: #4f46e5; color: #fff; border: none; padding: .9rem 2.5rem; border-radius: .75rem; box-shadow: 0 6px 14px rgba(79,70,229,.2); }
+.btn-search-large:hover{ background: #4338ca; color: #fff; }
+
+/* Booking list table compact styles */
+.booking-table{
+  font-size: .92rem;
+}
+.booking-table th, .booking-table td{
+  padding: .5rem .6rem;
+  vertical-align: middle;
+}
+.booking-table .text-truncate{ max-width: 240px; }
+.text-wrap-anywhere{ word-break: break-word; overflow-wrap: anywhere; }
+
+/* Icon-only small buttons for action column */
+.icon-btn{
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: .5rem;
+}
+.icon-btn svg{ width: 16px; height: 16px; }
+
+/* Ultra-compact icon actions for tables */
+.action-icons{ display: inline-flex; gap: .35rem; }
+.icon-action{
+  width: 30px;
+  height: 30px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: .5rem;
+  color: #374151;
+}
+.icon-action:hover{ background: #f9fafb; }
+.icon-action svg{ width: 16px; height: 16px; }

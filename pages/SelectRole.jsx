@@ -42,6 +42,7 @@ const SelectRole = () => {
   const handleRoleSelection = (role) => {
     console.log("Selected role:", role);
     DashboardRedirections(role, navigate);
+    localStorage.setItem("currentActiveRole" , role);
   };
 
   return (

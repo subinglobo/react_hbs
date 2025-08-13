@@ -15,6 +15,8 @@ import Test from "./pages/Test";
 import LandingPage from "./pages/LandingPage";
 import { Toaster } from "react-hot-toast";
 import Designations from "./pages/master/Designation";
+import HotelSearch from "./pages/HotelSearch";
+import HotelbookingList from "./pages/list/HotelbookingList";
 
 
 export default function App() {
@@ -61,6 +63,14 @@ export default function App() {
             }
           />
           <Route
+            path="/booking-details/hotel-booking-list"
+            element={
+              <PrivateRoute>
+                <HotelbookingList />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/staffDashboard"
             element={
               <PrivateRoute>
@@ -85,6 +95,7 @@ export default function App() {
             }
           />
           <Route path='/masters/designations' element={<Designations />} />
+           <Route path='/new-booking/hotel' element={<HotelSearch />} />
           
       </Routes>
 
