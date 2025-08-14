@@ -14,10 +14,10 @@ import {
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import Select from "react-select";
-import AsyncSelect from "react-select/async";
 import axiosInstance from "../components/AxiosInstance";
 import { FaLightbulb } from "react-icons/fa";
 import axios from "axios";
+import "../styles/HotelSearch.css";
 
 function RoomGuestSelector({ value, onChange }) {
   const [rooms, setRooms] = useState(value);
@@ -157,16 +157,24 @@ function LazyImage({ src, alt, className }) {
   }, []);
 
   const buildSrcSet = (url) => {
-    // Attempt to create responsive variants by replacing trailing size segment
     try {
-      const small = url.replace(/\/[0-9]+\/[0-9]+$/, "/320/180");
-      const medium = url.replace(/\/[0-9]+\/[0-9]+$/, "/480/270");
-      const large = url.replace(/\/[0-9]+\/[0-9]+$/, "/640/360");
+      const safeUrl = url || "https://via.placeholder.com/480x270";
+      const small = safeUrl.includes("/[0-9]+/[0-9]+$")
+        ? safeUrl.replace(/\/[0-9]+\/[0-9]+$/, "/320/180")
+        : `${safeUrl}?w=320&h=180`;
+      const medium = safeUrl.includes("/[0-9]+/[0-9]+$")
+        ? safeUrl.replace(/\/[0-9]+\/[0-9]+$/, "/480/270")
+        : `${safeUrl}?w=480&h=270`;
+      const large = safeUrl.includes("/[0-9]+/[0-9]+$")
+        ? safeUrl.replace(/\/[0-9]+\/[0-9]+$/, "/640/360")
+        : `${safeUrl}?w=640&h=360`;
       return `${small} 320w, ${medium} 480w, ${large} 640w`;
     } catch {
       return undefined;
     }
   };
+
+  const imageSrc = src || "https://via.placeholder.com/480x270";
 
   return (
     <div
@@ -178,8 +186,8 @@ function LazyImage({ src, alt, className }) {
       {!loaded && <div className="skeleton w-100 h-100" />}
       {inView && (
         <img
-          src={src}
-          srcSet={buildSrcSet(src)}
+          src={imageSrc}
+          srcSet={buildSrcSet(imageSrc)}
           sizes="(min-width:1200px) 33vw, (min-width:768px) 50vw, 100vw"
           loading="lazy"
           decoding="async"
@@ -194,11 +202,10 @@ function LazyImage({ src, alt, className }) {
 }
 
 export default function HotelSearch() {
-  const [nationalityList, setNationalityList] = useState([]); // for storing list
-  const [selectedNationality, setSelectedNationality] = useState(""); // for storing selected value
-  const [destination, setDestination] = useState([]); //old not used now
-  const [destinationOptions, setDestinationOptions] = useState([]); // list of cities
-  const [selectedDestination, setSelectedDestination] = useState(null); // selected value
+  const [nationalityList, setNationalityList] = useState([]);
+  const [selectedNationality, setSelectedNationality] = useState(null);
+  const [destinationOptions, setDestinationOptions] = useState([]);
+  const [selectedDestination, setSelectedDestination] = useState(null);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [nights, setNights] = useState(1);
@@ -234,69 +241,16 @@ export default function HotelSearch() {
     }
   };
 
-  const dummyPool = useMemo(() => {
-    const base = [
-      {
-        name: "Taj Santacruz",
-        city: "Mumbai",
-        price: 500.75,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "The Orchid Hotel",
-        city: "Mumbai",
-        price: 951.37,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "Ramada Plaza",
-        city: "Mumbai",
-        price: 1237.21,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "The LaLiT Mumbai",
-        city: "Mumbai",
-        price: 1254.27,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "Grand Palace",
-        city: "Dubai",
-        price: 780.0,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "Marina Bay",
-        city: "Dubai",
-        price: 980.0,
-        badge: "Breakfast Included",
-      },
-      {
-        name: "Palm Resort",
-        city: "Dubai",
-        price: 1400.0,
-        badge: "Breakfast Included",
-      },
-    ];
-    return Array.from({ length: 28 }).map((_, i) => ({
-      id: i + 1,
-      ...base[i % base.length],
-      image: `https://picsum.photos/seed/hs${i + 1}/480/270`,
-      rating: 3 + (i % 3),
-    }));
-  }, []);
-
   const [allResults, setAllResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sortBy, setSortBy] = useState("priceAsc");
+  const [sortBy, setSortBy] = useState("nameAsc");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [onlyBreakfast, setOnlyBreakfast] = useState(false);
   const [view, setView] = useState("card");
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(6); // fewer cards per page to improve perceived speed
+  const [pageSize, setPageSize] = useState(6);
 
   const filtered = useMemo(() => {
     let list = [...allResults];
@@ -305,14 +259,13 @@ export default function HotelSearch() {
         (r.badge || "").toLowerCase().includes("breakfast")
       );
     const min = parseFloat(minPrice);
-    if (!Number.isNaN(min)) list = list.filter((r) => r.price >= min);
+    if (!Number.isNaN(min)) list = list.filter((r) => r.price && r.price >= min);
     const max = parseFloat(maxPrice);
-    if (!Number.isNaN(max)) list = list.filter((r) => r.price <= max);
-    if (sortBy === "priceAsc") list.sort((a, b) => a.price - b.price);
-    if (sortBy === "priceDesc") list.sort((a, b) => b.price - a.price);
+    if (!Number.isNaN(max)) list = list.filter((r) => r.price && r.price <= max);
+    if (sortBy === "priceAsc") list.sort((a, b) => (a.price || 0) - (b.price || 0));
+    if (sortBy === "priceDesc") list.sort((a, b) => (b.price || 0) - (a.price || 0));
     if (sortBy === "nameAsc") list.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy === "nameDesc")
-      list.sort((a, b) => b.name.localeCompare(a.name));
+    if (sortBy === "nameDesc") list.sort((a, b) => b.name.localeCompare(a.name));
     return list;
   }, [allResults, onlyBreakfast, minPrice, maxPrice, sortBy]);
 
@@ -353,35 +306,38 @@ export default function HotelSearch() {
   const countryList = async () => {
     try {
       const response = await axios.get("/api/country");
-
-      // Convert API data to react-select format { value: id, label: name }
-      const options = response.data.map((country) => ({
-        value: country.id,
-        label: country.name,
-      }));
+      const options = Array.isArray(response.data)
+        ? response.data.map((country) => ({
+            value: country.id,
+            label: country.name,
+          }))
+        : [];
       setNationalityList(options);
     } catch (error) {
-      console.log("error for country list :", error);
+      console.log("error for country list:", error);
+      setNationalityList([]);
     }
   };
 
   const cityList = async (countryId) => {
     if (!countryId) {
-      setDestinationOptions([]); // reset if no nationality selected
+      setDestinationOptions([]);
       return;
     }
     try {
       const response = await axiosInstance.get(
         `/api/destination/getCitiesByCountryId/${countryId}`
       );
-      const cityApiRes = response.data;
+      const cityApiRes = Array.isArray(response.data) ? response.data : [];
       const options = cityApiRes.map((city) => ({
         value: city.id,
-        label: `${city.name} , ${city.country}`,
+        label: `${city.name}, ${city.country}`,
+        countryId: city.countryId,
       }));
       setDestinationOptions(options);
     } catch (error) {
-      console.log("axios call error for city list : ", error);
+      console.log("axios call error for city list:", error);
+      setDestinationOptions([]);
     }
   };
 
@@ -389,15 +345,13 @@ export default function HotelSearch() {
     countryList();
   }, []);
 
-  // Watch for nationality change
   useEffect(() => {
     if (selectedNationality) {
       cityList(selectedNationality.value);
-      setSelectedDestination(null); // reset destination selection
+      setSelectedDestination(null);
     }
   }, [selectedNationality]);
 
-  // utils/dateUtils.js
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   const getTomorrow = (date = new Date()) => {
@@ -415,34 +369,100 @@ export default function HotelSearch() {
     minCheckOutDate = formatDate(getTomorrow());
   }
 
+  const pollUntilComplete = async (url, params, checkComplete, intervalMs = 5000, timeoutMs = 20000) => {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+
+      const intervalId = setInterval(async () => {
+        try {
+          const res = await axiosInstance.get(url, { params });
+          const isComplete = checkComplete(res.data);
+
+          if (isComplete) {
+            clearInterval(intervalId);
+            resolve(res.data);
+          } else if (Date.now() - startTime >= timeoutMs) {
+            clearInterval(intervalId);
+            reject(new Error("Polling timed out"));
+          }
+        } catch (err) {
+          clearInterval(intervalId);
+          reject(err);
+        }
+      }, intervalMs);
+    });
+  };
+
   const handleSearchSubmit = async (e) => {
     e.preventDefault();
-
-    alert("search btn clicked")
+    if (!selectedNationality || !selectedDestination || !checkIn || !checkOut) {
+      alert("Please fill in all required fields: Nationality, Destination, Check-in, and Check-out.");
+      return;
+    }
     setIsLoading(true);
     setHasSearched(true);
+
     try {
-     
-        let searchPayloadReq = {
-            selectedNationality,
-            destination,
-            checkIn,
-            checkOut,
-            nights,
-            rooms,
-            agent,
-        }
+      const nationalityId = selectedNationality.value;
+      const destinationCityId = selectedDestination.value;
+      const destinationCountryId = selectedDestination.countryId;
+      const noOfRooms = String(rooms.length);
 
-        console.log("searchkey request::" , searchPayloadReq)
+      const roomConfigurations = rooms.map((room, index) => ({
+        roomNo: index + 1,
+        adultCount: String(room.adults || 1),
+        childCount: String(room.children || 0),
+        childAges: room.childAges?.length ? room.childAges : [0],
+        adultAges: room.adultAges?.length ? room.adultAges : [25],
+      }));
 
-        const searchKeyRes = await axiosInstance.Post("/hotel-search/search", searchPayloadReq);
+      const agentId = agent;
 
-        console.log("searchkey res::" , searchKeyRes)
-        setAllResults(data?.content || []);
-      
+      const searchPayloadReq = {
+        nationalityId,
+        destinationCityId,
+        destinationCountryId,
+        checkIn,
+        checkOut,
+        noOfRooms,
+        roomConfigurations,
+        agentId,
+      };
+
+      const searchKeyRes = await axiosInstance.post("/hotel-search/search", searchPayloadReq);
+      const searchId = searchKeyRes.data.searchId;
+      if (!searchId) throw new Error("No searchId returned");
+
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+
+      const finalData = await pollUntilComplete(
+        `/hotel-search/results/${searchId}`,
+        { agentId },
+        (data) => data.finalStatus === "COMPLETED",
+        5000,
+        20000
+      );
+
+      console.log("Final Results:", finalData);
+      const mappedResults = Array.isArray(finalData.result)
+        ? finalData.result.map((hotel, index) => ({
+            id: hotel.hotelCode || `h${index + 1}`,
+            name: hotel.hotelName || "Unknown Hotel",
+            city: hotel.hotelAddress
+              ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
+              : "Unknown City",
+            price: hotel.baseRate || null,
+            badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
+            image: hotel.hotelImage || "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
+            rating: hotel.starRating || 0,
+          }))
+        : [];
+      console.log("mappedResults:::", mappedResults);
+      setAllResults(mappedResults);
     } catch (err) {
-      console.log("Sorry not able to search!!" , err)
+      console.error("Search failed:", err);
       setAllResults([]);
+      alert("Search failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -457,7 +477,6 @@ export default function HotelSearch() {
           <Card className="shadow-sm rounded-xl mb-4 search-card">
             <Card.Body>
               <Form onSubmit={handleSearchSubmit}>
-                {/* Row 1: Nationality + Destination */}
                 <Row className="g-3 align-items-end">
                   <Col md={3}>
                     <Form.Group>
@@ -489,7 +508,7 @@ export default function HotelSearch() {
                         <div style={{ paddingLeft: 36 }}>
                           <Select
                             options={destinationOptions}
-                            value={selectedDestination} // Keep as object
+                            value={selectedDestination}
                             onChange={(option) =>
                               setSelectedDestination(option)
                             }
@@ -502,7 +521,6 @@ export default function HotelSearch() {
                   </Col>
                 </Row>
 
-                {/* Row 2: Dates + Nights + Rooms */}
                 <Row className="g-3 align-items-end mt-1">
                   <Col md={3}>
                     <Form.Group>
@@ -517,8 +535,6 @@ export default function HotelSearch() {
                           onChange={(e) => {
                             const newCheckIn = e.target.value;
                             setCheckIn(newCheckIn);
-
-                            // Auto-adjust checkout if it's before or same as new check-in
                             if (
                               !checkOut ||
                               new Date(newCheckIn) >= new Date(checkOut)
@@ -583,7 +599,6 @@ export default function HotelSearch() {
                     </Col>
                   </Row>
                 )}
-                {/* Row 3: Agent */}
                 <Row className="g-3 mt-1">
                   <Col md={4}>
                     <Form.Group>
@@ -599,15 +614,12 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
                 </Row>
-
-                {/* Row 4: Centered Search */}
                 <Row className="mt-3">
                   <Col className="d-flex justify-content-center">
                     <Button
                       type="submit"
                       className="btn-search-large"
                       disabled={isLoading}
-                      
                     >
                       {isLoading ? "Searching..." : "SEARCH"}
                     </Button>
@@ -687,10 +699,10 @@ export default function HotelSearch() {
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                       >
-                        <option value="priceAsc">Price: Low to High</option>
-                        <option value="priceDesc">Price: High to Low</option>
                         <option value="nameAsc">Name: A-Z</option>
                         <option value="nameDesc">Name: Z-A</option>
+                        <option value="priceAsc">Price: Low to High</option>
+                        <option value="priceDesc">Price: High to Low</option>
                       </Form.Select>
                     </Form.Group>
                   </div>
@@ -741,6 +753,7 @@ export default function HotelSearch() {
                           <Card.Body>
                             <div className="h5 mb-1">{hotel.name}</div>
                             <div className="text-muted mb-2">{hotel.city}</div>
+                            <div className="text-muted mb-2">Rating: {hotel.rating} stars</div>
                             <Badge
                               bg="success"
                               className="mb-3"
@@ -753,7 +766,9 @@ export default function HotelSearch() {
                             </Badge>
                             <div className="d-flex justify-content-between align-items-center">
                               <div className="h5 mb-0">
-                                AED{hotel.price.toLocaleString()}
+                                {hotel.price
+                                  ? `AED${hotel.price.toLocaleString()}`
+                                  : "Price Unavailable"}
                               </div>
                               <Button className="btn-green">View Rooms</Button>
                             </div>

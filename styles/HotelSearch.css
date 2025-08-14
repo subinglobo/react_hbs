@@ -1,0 +1,80 @@
+/* --- Search Form Card --- */
+.search-card {
+  max-width: 100%;
+  padding: 15px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.search-card .form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.search-card input,
+.search-card select,
+.search-card button {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+}
+
+.btn-search-large {
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+
+/* Reduce gap between rows inside form */
+.search-card .row {
+  margin-bottom: 0.6rem;
+}
+
+/* --- Hotel Result Cards --- */
+.lazy-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.lazy-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.lazy-card .card-body {
+  padding: 12px;
+}
+
+.lazy-card .h5 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.lazy-card img {
+  height: 180px;
+  object-fit: cover;
+}
+
+/* Price & Button Row */
+.lazy-card .d-flex {
+  margin-top: 8px;
+}
+
+.btn-green {
+  background: #198754;
+  border: none;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.btn-green:hover {
+  background: #146c43;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .search-card {
+    padding: 10px;
+  }
+  .lazy-card img {
+    height: 150px;
+  }
+}
