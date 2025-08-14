@@ -25,7 +25,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      console.log("token in axiosInstance::" ,  token);
+      
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -66,7 +66,7 @@ axiosInstance.interceptors.response.use(
 
       try {
 
-        console.log("inside refresh token end point try");
+        
         const response = await axios.post(
           "/auth/refresh-token",
           {},
@@ -75,7 +75,7 @@ axiosInstance.interceptors.response.use(
           }
         );
 
-        console.log("refreshtoken endpoint response::"  , response)
+        
 
         const newAccessToken = response.data.accessToken;
         localStorage.setItem("authToken", newAccessToken);

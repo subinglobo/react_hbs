@@ -2,7 +2,7 @@ import React from 'react'
 
 const DashboardRedirections = (role, navigate) => {
 
-  console.log("roles::" , role);
+
   const dashboards = {
     "ADMIN": "/adminDashboard",
     "AGENT": "/agentDashboard",

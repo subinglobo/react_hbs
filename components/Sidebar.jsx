@@ -19,11 +19,9 @@ export default function Sidebar() {
     .split(",")
     .map((role) => role.trim().toLowerCase());
 
-    console.log("storedRoles::" , storedRoles)
-
   // Get current active role (this could also come from localStorage as "currentActiveRole")
   const currentRole = localStorage.getItem("currentActiveRole")?.toLowerCase() || storedRoles[0] || "";
-   console.log("currentRole::" , currentRole)
+   
 
   // Set dashboard path based on current active role
   let dashboardPath = "/";

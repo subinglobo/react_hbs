@@ -4,11 +4,11 @@ import "../styles/SelectRole.css";
 import DashboardRedirections from "../components/DashboardRedirections";
 
 const SelectRole = () => {
-  console.log("SelectRole component rendered");
+
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  console.log("Location state:", state);
+
 
   const roles = state?.roles || [];
 
@@ -40,7 +40,7 @@ const SelectRole = () => {
   });
 
   const handleRoleSelection = (role) => {
-    console.log("Selected role:", role);
+  
     DashboardRedirections(role, navigate);
     localStorage.setItem("currentActiveRole" , role);
   };
