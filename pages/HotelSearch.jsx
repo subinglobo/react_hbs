@@ -264,6 +264,7 @@ export default function HotelSearch() {
   const [view, setView] = useState("card");
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(9); // Increased to show more results
+  const [hasSearchResult, setHasSearchResult] = useState(false);
 
   // Filter options
   const starOptions = [
@@ -284,7 +285,7 @@ export default function HotelSearch() {
   const channelTypeOptions = [
     { value: "inhouse", label: "Inhouse" },
     { value: "iwtx", label: "IWTX" },
-    { value: "atharva", label: "Atharva" },
+    { value: "x3", label: "x3" },
     { value: "ratehawk", label: "Ratehawk" },
   ];
 
@@ -382,10 +383,9 @@ export default function HotelSearch() {
   };
 
   const cityList = async (searchText = "") => {
-  
     try {
       const response = await axiosInstance.get(
-           `/api/destination?search=${searchText}`
+        `/api/destination?search=${searchText}`
       );
       const cityApiRes = Array.isArray(response.data) ? response.data : [];
       const options = cityApiRes.map((city) => ({
@@ -402,7 +402,7 @@ export default function HotelSearch() {
 
   useEffect(() => {
     countryList();
-     cityList();
+    cityList();
   }, []);
 
   const formatDate = (date) => date.toISOString().split("T")[0];
@@ -422,35 +422,41 @@ export default function HotelSearch() {
     minCheckOutDate = formatDate(getTomorrow());
   }
 
-  const pollUntilComplete = async (
-    url,
-    params,
-    checkComplete,
-    intervalMs = 5000,
-    timeoutMs = 20000
-  ) => {
-    return new Promise((resolve, reject) => {
-      const startTime = Date.now();
+ const pollUntilComplete = async (
+  url,
+  params,
+  checkComplete,
+  intervalMs = 4000,
+  timeoutMs = 20000,
+  initialDelay = 1000 // ⏳ wait before first poll
+) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
 
-      const intervalId = setInterval(async () => {
-        try {
-          const res = await axiosInstance.get(url, { params });
-          const isComplete = checkComplete(res.data);
-
-          if (isComplete) {
-            clearInterval(intervalId);
-            resolve(res.data);
-          } else if (Date.now() - startTime >= timeoutMs) {
-            clearInterval(intervalId);
-            reject(new Error("Polling timed out"));
-          }
-        } catch (err) {
+    const check = async () => {
+      try {
+        const res = await axiosInstance.get(url, { params });
+        if (checkComplete(res.data)) {
           clearInterval(intervalId);
-          reject(err);
+          resolve(res.data);
+        } else if (Date.now() - startTime >= timeoutMs) {
+          clearInterval(intervalId);
+          reject(new Error("Polling timed out"));
         }
-      }, intervalMs);
-    });
-  };
+      } catch (err) {
+        clearInterval(intervalId);
+        reject(err);
+      }
+    };
+
+    // first call after initialDelay
+    const timeoutId = setTimeout(check, initialDelay);
+
+    // subsequent calls every intervalMs
+    const intervalId = setInterval(check, intervalMs);
+  });
+};
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -484,6 +490,7 @@ export default function HotelSearch() {
   };
 
   const handleSearchSubmit = async (e) => {
+    console.log("handleSearchSubmit called"); // Debug log
     e.preventDefault();
 
     const formErrors = validateForm();
@@ -531,14 +538,15 @@ export default function HotelSearch() {
       const searchId = searchKeyRes.data.searchId;
       if (!searchId) throw new Error("No searchId returned");
 
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const finalData = await pollUntilComplete(
         `/hotel-search/results/${searchId}`,
         { agentId },
         (data) => data.finalStatus === "COMPLETED",
-        5000,
-        20000
+        4000, // poll every 4 sec
+        20000, // timeout 20 sec
+        1000 // wait 3 sec before first poll
       );
 
       console.log("Final Results:", finalData);
@@ -560,6 +568,7 @@ export default function HotelSearch() {
           }))
         : [];
       console.log("mappedResults:::", mappedResults);
+      setHasSearchResult(true);
       setAllResults(mappedResults);
     } catch (err) {
       console.error("Search failed:", err);
@@ -628,13 +637,12 @@ export default function HotelSearch() {
                         placeholder="Where do you want to go?"
                         isSearchable
                         className="modern-select"
-
-                          // 👇 fetch as user types
-  onInputChange={(inputValue, { action }) => {
-    if (action === "input-change") {
-      cityList(inputValue); // call API with typed text
-    }
-  }}
+                        // 👇 fetch as user types
+                        onInputChange={(inputValue, { action }) => {
+                          if (action === "input-change") {
+                            cityList(inputValue); // call API with typed text
+                          }
+                        }}
                       />
                       {errors.destination && (
                         <div className="text-danger small mt-1">
@@ -812,10 +820,10 @@ export default function HotelSearch() {
             </Card>
           )}
 
-          {hasSearched && (
+          {hasSearched && hasSearchResult && (
             <>
               {/* Filters and Controls */}
-              <Card className="shadow-sm rounded-xl mb-4">
+              <Card className="shadow-sm rounded-xl mb-4 filtersection">
                 <Card.Body className="p-3">
                   <Row className="g-3 align-items-center">
                     {/* View Toggle */}
@@ -969,7 +977,7 @@ export default function HotelSearch() {
               )}
 
               {/* Search Results */}
-              {view === "card" && !isLoading && (
+              {view === "card" && !isLoading && hasSearchResult && (
                 <Row xs={1} md={2} xl={3} className="g-3">
                   {pageItems.map((hotel) => (
                     <Col key={hotel.id}>
