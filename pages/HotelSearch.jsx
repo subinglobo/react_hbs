@@ -583,7 +583,7 @@ export default function HotelSearch() {
                     "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
                   rating: hotel.starRating || 0,
                   hotelType: "hotel",
-                  channelType: "inhouse",
+                  channelType: "inhouse", 
                 };
               })
             : [];
