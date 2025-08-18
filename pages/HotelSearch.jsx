@@ -10,12 +10,21 @@ import {
   ButtonGroup,
   ToggleButton,
   Placeholder,
+  Spinner,
 } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import Select from "react-select";
 import axiosInstance from "../components/AxiosInstance";
-import { FaLightbulb } from "react-icons/fa";
+import {
+  FaLightbulb,
+  FaSearch,
+  FaFilter,
+  FaSort,
+  FaStar,
+  FaBuilding,
+  FaGlobe,
+} from "react-icons/fa";
 import axios from "axios";
 import "../styles/HotelSearch.css";
 
@@ -215,6 +224,14 @@ export default function HotelSearch() {
   ]);
   const [roomsOpen, setRoomsOpen] = useState(false);
 
+  // New filter states
+  const [starRating, setStarRating] = useState([]);
+  const [hotelType, setHotelType] = useState([]);
+  const [channelType, setChannelType] = useState([]);
+  const [sortBy, setSortBy] = useState("priceAsc");
+  const [hotelSearchTerm, setHotelSearchTerm] = useState("");
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (checkIn && checkOut) {
       const start = new Date(checkIn);
@@ -244,30 +261,75 @@ export default function HotelSearch() {
   const [allResults, setAllResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sortBy, setSortBy] = useState("nameAsc");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [onlyBreakfast, setOnlyBreakfast] = useState(false);
   const [view, setView] = useState("card");
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(9); // Increased to show more results
+
+  // Filter options
+  const starOptions = [
+    { value: 5, label: "5 Stars" },
+    { value: 4, label: "4 Stars" },
+    { value: 3, label: "3 Stars" },
+    { value: 2, label: "2 Stars" },
+    { value: 1, label: "1 Star" },
+  ];
+
+  const hotelTypeOptions = [
+    { value: "hotel", label: "Hotel" },
+    { value: "villa", label: "Villa" },
+    { value: "resort", label: "Resort" },
+    { value: "apartment", label: "Apartment" },
+  ];
+
+  const channelTypeOptions = [
+    { value: "inhouse", label: "Inhouse" },
+    { value: "iwtx", label: "IWTX" },
+    { value: "atharva", label: "Atharva" },
+    { value: "ratehawk", label: "Ratehawk" },
+  ];
 
   const filtered = useMemo(() => {
     let list = [...allResults];
-    if (onlyBreakfast)
-      list = list.filter((r) =>
-        (r.badge || "").toLowerCase().includes("breakfast")
+
+    // Hotel name search filter
+    if (hotelSearchTerm.trim()) {
+      list = list.filter((hotel) =>
+        hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
       );
-    const min = parseFloat(minPrice);
-    if (!Number.isNaN(min)) list = list.filter((r) => r.price && r.price >= min);
-    const max = parseFloat(maxPrice);
-    if (!Number.isNaN(max)) list = list.filter((r) => r.price && r.price <= max);
-    if (sortBy === "priceAsc") list.sort((a, b) => (a.price || 0) - (b.price || 0));
-    if (sortBy === "priceDesc") list.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+
+    // Star rating filter
+    if (starRating.length > 0) {
+      list = list.filter((r) => starRating.includes(r.rating));
+    }
+
+    // Hotel type filter (mock implementation - you'll need to add hotelType to your data)
+    if (hotelType.length > 0) {
+      list = list.filter((r) => hotelType.includes(r.hotelType || "hotel"));
+    }
+
+    // Channel type filter (mock implementation - you'll need to add channelType to your data)
+    if (channelType.length > 0) {
+      list = list.filter((r) =>
+        channelType.includes(r.channelType || "inhouse")
+      );
+    }
+
+    // Sorting
+    if (sortBy === "priceAsc")
+      list.sort((a, b) => (a.price || 0) - (b.price || 0));
+    if (sortBy === "priceDesc")
+      list.sort((a, b) => (b.price || 0) - (a.price || 0));
     if (sortBy === "nameAsc") list.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy === "nameDesc") list.sort((a, b) => b.name.localeCompare(a.name));
+    if (sortBy === "nameDesc")
+      list.sort((a, b) => b.name.localeCompare(a.name));
+    if (sortBy === "ratingDesc")
+      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (sortBy === "ratingAsc")
+      list.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+
     return list;
-  }, [allResults, onlyBreakfast, minPrice, maxPrice, sortBy]);
+  }, [allResults, starRating, hotelType, channelType, sortBy, hotelSearchTerm]);
 
   const totalElements = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
@@ -319,14 +381,11 @@ export default function HotelSearch() {
     }
   };
 
-  const cityList = async (countryId) => {
-    if (!countryId) {
-      setDestinationOptions([]);
-      return;
-    }
+  const cityList = async (searchText = "") => {
+  
     try {
       const response = await axiosInstance.get(
-        `/api/destination/getCitiesByCountryId/${countryId}`
+           `/api/destination?search=${searchText}`
       );
       const cityApiRes = Array.isArray(response.data) ? response.data : [];
       const options = cityApiRes.map((city) => ({
@@ -343,14 +402,8 @@ export default function HotelSearch() {
 
   useEffect(() => {
     countryList();
+     cityList();
   }, []);
-
-  useEffect(() => {
-    if (selectedNationality) {
-      cityList(selectedNationality.value);
-      setSelectedDestination(null);
-    }
-  }, [selectedNationality]);
 
   const formatDate = (date) => date.toISOString().split("T")[0];
 
@@ -369,7 +422,13 @@ export default function HotelSearch() {
     minCheckOutDate = formatDate(getTomorrow());
   }
 
-  const pollUntilComplete = async (url, params, checkComplete, intervalMs = 5000, timeoutMs = 20000) => {
+  const pollUntilComplete = async (
+    url,
+    params,
+    checkComplete,
+    intervalMs = 5000,
+    timeoutMs = 20000
+  ) => {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
 
@@ -393,12 +452,48 @@ export default function HotelSearch() {
     });
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Nationality validation
+    if (!selectedNationality) {
+      newErrors.nationality = "Nationality is required";
+    }
+
+    // Destination validation
+    if (!selectedDestination) {
+      newErrors.destination = "Destination is required";
+    }
+
+    // Check-in validation
+    if (!checkIn) {
+      newErrors.checkIn = "Check-in date is required";
+    }
+
+    // Check-out validation
+    if (!checkOut) {
+      newErrors.checkOut = "Check-out date is required";
+    }
+
+    // Agent validation
+    if (!agent) {
+      newErrors.agent = "Agent is required";
+    }
+
+    return newErrors;
+  };
+
   const handleSearchSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedNationality || !selectedDestination || !checkIn || !checkOut) {
-      alert("Please fill in all required fields: Nationality, Destination, Check-in, and Check-out.");
+
+    const formErrors = validateForm();
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      setHasSearched(false);
       return;
     }
+
     setIsLoading(true);
     setHasSearched(true);
 
@@ -429,11 +524,14 @@ export default function HotelSearch() {
         agentId,
       };
 
-      const searchKeyRes = await axiosInstance.post("/hotel-search/search", searchPayloadReq);
+      const searchKeyRes = await axiosInstance.post(
+        "/hotel-search/search",
+        searchPayloadReq
+      );
       const searchId = searchKeyRes.data.searchId;
       if (!searchId) throw new Error("No searchId returned");
 
-      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const finalData = await pollUntilComplete(
         `/hotel-search/results/${searchId}`,
@@ -453,8 +551,12 @@ export default function HotelSearch() {
               : "Unknown City",
             price: hotel.baseRate || null,
             badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
-            image: hotel.hotelImage || "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
+            image:
+              hotel.hotelImage ||
+              "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
             rating: hotel.starRating || 0,
+            hotelType: "hotel", // Mock data - replace with actual data
+            channelType: "inhouse", // Mock data - replace with actual data
           }))
         : [];
       console.log("mappedResults:::", mappedResults);
@@ -474,99 +576,135 @@ export default function HotelSearch() {
       <div className="d-flex flex-grow-1">
         <Sidebar />
         <main className="flex-grow-1 p-4">
-          <Card className="shadow-sm rounded-xl mb-4 search-card">
-            <Card.Body>
+          {/* Modern Search Form */}
+          <Card className="shadow-sm rounded-xl mb-4 search-card-modern">
+            <Card.Body className="p-4">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold text-primary mb-2">
+                  Find Your Perfect Stay
+                </h2>
+                <p className="text-muted">
+                  Discover amazing hotels and exclusive deals
+                </p>
+              </div>
+
               <Form onSubmit={handleSearchSubmit}>
-                <Row className="g-3 align-items-end">
-                  <Col md={3}>
+                <Row className="g-4">
+                  {/* Nationality */}
+                  <Col lg={3} md={6}>
                     <Form.Group>
-                      <Form.Label>Nationality</Form.Label>
+                      <Form.Label className="fw-semibold text-dark">
+                        <FaGlobe className="me-2 text-primary" />
+                        Nationality
+                      </Form.Label>
                       <Select
                         options={nationalityList}
                         value={selectedNationality}
                         onChange={(option) => setSelectedNationality(option)}
                         placeholder="Select nationality"
                         isSearchable
+                        className="modern-select"
                       />
-                    </Form.Group>
-                  </Col>
-                  <Col md={9}>
-                    <Form.Group>
-                      <Form.Label>Destination</Form.Label>
-                      <div className="position-relative">
-                        <span
-                          className="position-absolute"
-                          style={{
-                            left: 12,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 2,
-                          }}
-                        >
-                          <FaLightbulb />
-                        </span>
-                        <div style={{ paddingLeft: 36 }}>
-                          <Select
-                            options={destinationOptions}
-                            value={selectedDestination}
-                            onChange={(option) =>
-                              setSelectedDestination(option)
-                            }
-                            placeholder="Enter a destination or property"
-                            isSearchable
-                          />
-                        </div>
-                      </div>
-                    </Form.Group>
-                  </Col>
-                </Row>
 
-                <Row className="g-3 align-items-end mt-1">
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>Check-in</Form.Label>
-                      <div className="position-relative input-with-icon">
-                        <span className="icon-left">📅</span>
-                        <Form.Control
-                          className="date-control date-picker"
-                          type="date"
-                          value={checkIn}
-                          min={today}
-                          onChange={(e) => {
-                            const newCheckIn = e.target.value;
-                            setCheckIn(newCheckIn);
-                            if (
-                              !checkOut ||
-                              new Date(newCheckIn) >= new Date(checkOut)
-                            ) {
-                              setCheckOut(
-                                formatDate(getTomorrow(new Date(newCheckIn)))
-                              );
-                            }
-                          }}
-                        />
-                      </div>
+                      {errors.nationality && (
+                        <div className="text-danger small mt-1">
+                          {errors.nationality}
+                        </div>
+                      )}
                     </Form.Group>
                   </Col>
-                  <Col md={3}>
+
+                  {/* Destination */}
+                  <Col lg={6} md={6}>
                     <Form.Group>
-                      <Form.Label>Check-out</Form.Label>
-                      <div className="position-relative input-with-icon">
-                        <span className="icon-left">📅</span>
-                        <Form.Control
-                          className="date-control"
-                          type="date"
-                          value={checkOut}
-                          min={minCheckOutDate}
-                          onChange={(e) => setCheckOut(e.target.value)}
-                        />
-                      </div>
+                      <Form.Label className="fw-semibold text-dark">
+                        <FaLightbulb className="me-2 text-warning" />
+                        Destination
+                      </Form.Label>
+                      <Select
+                        options={destinationOptions}
+                        value={selectedDestination}
+                        onChange={(option) => setSelectedDestination(option)}
+                        placeholder="Where do you want to go?"
+                        isSearchable
+                        className="modern-select"
+
+                          // 👇 fetch as user types
+  onInputChange={(inputValue, { action }) => {
+    if (action === "input-change") {
+      cityList(inputValue); // call API with typed text
+    }
+  }}
+                      />
+                      {errors.destination && (
+                        <div className="text-danger small mt-1">
+                          {errors.destination}
+                        </div>
+                      )}
                     </Form.Group>
                   </Col>
-                  <Col md={2}>
+
+                  {/* Check-in */}
+                  <Col lg={3} md={6}>
                     <Form.Group>
-                      <Form.Label>No. of Nights</Form.Label>
+                      <Form.Label className="fw-semibold text-dark">
+                        📅 Check-in
+                      </Form.Label>
                       <Form.Control
+                        className="form-control-modern"
+                        type="date"
+                        value={checkIn}
+                        min={today}
+                        onChange={(e) => {
+                          const newCheckIn = e.target.value;
+                          setCheckIn(newCheckIn);
+                          if (
+                            !checkOut ||
+                            new Date(newCheckIn) >= new Date(checkOut)
+                          ) {
+                            setCheckOut(
+                              formatDate(getTomorrow(new Date(newCheckIn)))
+                            );
+                          }
+                        }}
+                      />
+                      {errors.checkIn && (
+                        <div className="text-danger small mt-1">
+                          {errors.checkIn}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+
+                  {/* Check-out */}
+                  <Col lg={3} md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold text-dark">
+                        📅 Check-out
+                      </Form.Label>
+                      <Form.Control
+                        className="form-control-modern"
+                        type="date"
+                        value={checkOut}
+                        min={minCheckOutDate}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                      />
+                      {errors.checkOut && (
+                        <div className="text-danger small mt-1">
+                          {errors.checkOut}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+
+                  {/* Nights */}
+                  <Col lg={2} md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold text-dark">
+                        🌙 Nights
+                      </Form.Label>
+                      <Form.Control
+                        className="form-control-modern"
                         type="number"
                         min={1}
                         max={60}
@@ -575,11 +713,15 @@ export default function HotelSearch() {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
-                    <Form.Label>Rooms & Guests</Form.Label>
+
+                  {/* Rooms & Guests */}
+                  <Col lg={4} md={6}>
+                    <Form.Label className="fw-semibold text-dark">
+                      👥 Rooms & Guests
+                    </Form.Label>
                     <Button
-                      variant="outline-secondary"
-                      className="w-100 text-start rooms-summary-btn"
+                      variant="outline-primary"
+                      className="w-100 text-start rooms-summary-btn-modern"
                       type="button"
                       onClick={() => setRoomsOpen((o) => !o)}
                     >
@@ -591,19 +733,15 @@ export default function HotelSearch() {
                       <span className="float-end">{roomsOpen ? "▴" : "▾"}</span>
                     </Button>
                   </Col>
-                </Row>
-                {roomsOpen && (
-                  <Row className="g-3 mt-2">
-                    <Col md={12}>
-                      <RoomGuestSelector value={rooms} onChange={setRooms} />
-                    </Col>
-                  </Row>
-                )}
-                <Row className="g-3 mt-1">
-                  <Col md={4}>
+
+                  {/* Agent */}
+                  <Col lg={3} md={6}>
                     <Form.Group>
-                      <Form.Label>Agent</Form.Label>
+                      <Form.Label className="fw-semibold text-dark">
+                        👤 Agent
+                      </Form.Label>
                       <Form.Select
+                        className="form-control-modern"
                         value={agent}
                         onChange={(e) => setAgent(e.target.value)}
                       >
@@ -611,176 +749,270 @@ export default function HotelSearch() {
                         <option value="101">Agent 101</option>
                         <option value="102">Agent 102</option>
                       </Form.Select>
+                      {errors.agent && (
+                        <div className="text-danger small mt-1">
+                          {errors.agent}
+                        </div>
+                      )}
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+
+                {/* Rooms Configuration */}
+                {roomsOpen && (
+                  <Row className="g-3 mt-3">
+                    <Col md={12}>
+                      <RoomGuestSelector value={rooms} onChange={setRooms} />
+                    </Col>
+                  </Row>
+                )}
+
+                {/* Search Button */}
+                <Row className="mt-4">
                   <Col className="d-flex justify-content-center">
                     <Button
                       type="submit"
-                      className="btn-search-large"
+                      className="btn-search-modern"
                       disabled={isLoading}
+                      size="lg"
                     >
-                      {isLoading ? "Searching..." : "SEARCH"}
+                      {isLoading ? (
+                        <>
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <FaSearch className="me-2" />
+                          SEARCH HOTELS
+                        </>
+                      )}
                     </Button>
                   </Col>
                 </Row>
               </Form>
             </Card.Body>
           </Card>
+
+          {/* Search Results Section */}
           {!hasSearched && (
             <Card className="shadow-sm rounded-xl">
               <Card.Body className="text-center text-muted py-5">
-                Use the search form above to find hotels.
+                <FaSearch className="display-4 text-muted mb-3" />
+                <h4>Ready to Find Your Perfect Stay?</h4>
+                <p>
+                  Use the search form above to discover amazing hotels and
+                  exclusive deals.
+                </p>
               </Card.Body>
             </Card>
           )}
 
           {hasSearched && (
             <>
-              <Card className="shadow-sm rounded-xl mb-3">
-                <Card.Body className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                  <ButtonGroup>
-                    <ToggleButton
-                      id="view-card"
-                      type="radio"
-                      variant={view === "card" ? "dark" : "outline-secondary"}
-                      checked={view === "card"}
-                      value="card"
-                      onChange={() => setView("card")}
-                    >
-                      Card View
-                    </ToggleButton>
-                    <ToggleButton
-                      id="view-map"
-                      type="radio"
-                      variant={view === "map" ? "dark" : "outline-secondary"}
-                      checked={view === "map"}
-                      value="map"
-                      onChange={() => setView("map")}
-                      disabled
-                    >
-                      Map View
-                    </ToggleButton>
-                  </ButtonGroup>
-                  <div className="d-flex flex-wrap align-items-end gap-2">
-                    <Form.Group>
-                      <Form.Label className="mb-0 small">Min Price</Form.Label>
-                      <Form.Control
-                        size="sm"
-                        type="number"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        placeholder="0"
-                      />
-                    </Form.Group>
-                    <Form.Group>
-                      <Form.Label className="mb-0 small">Max Price</Form.Label>
-                      <Form.Control
-                        size="sm"
-                        type="number"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        placeholder="Any"
-                      />
-                    </Form.Group>
-                    <Form.Group className="ms-2">
-                      <Form.Check
-                        type="checkbox"
-                        label="Breakfast only"
-                        checked={onlyBreakfast}
-                        onChange={(e) => setOnlyBreakfast(e.target.checked)}
-                      />
-                    </Form.Group>
-                    <Form.Group className="ms-2">
-                      <Form.Label className="mb-0 small">Sort</Form.Label>
-                      <Form.Select
-                        size="sm"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                      >
-                        <option value="nameAsc">Name: A-Z</option>
-                        <option value="nameDesc">Name: Z-A</option>
-                        <option value="priceAsc">Price: Low to High</option>
-                        <option value="priceDesc">Price: High to Low</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </div>
+              {/* Filters and Controls */}
+              <Card className="shadow-sm rounded-xl mb-4">
+                <Card.Body className="p-3">
+                  <Row className="g-3 align-items-center">
+                    {/* View Toggle */}
+                    <Col lg={2} md={6}>
+                      <ButtonGroup className="w-100">
+                        <ToggleButton
+                          id="view-card"
+                          type="radio"
+                          variant={
+                            view === "card" ? "primary" : "outline-secondary"
+                          }
+                          checked={view === "card"}
+                          value="card"
+                          onChange={() => setView("card")}
+                          size="sm"
+                        >
+                          <FaBuilding className="me-1" />
+                          Cards
+                        </ToggleButton>
+                        <ToggleButton
+                          id="view-map"
+                          type="radio"
+                          variant={
+                            view === "map" ? "primary" : "outline-secondary"
+                          }
+                          checked={view === "map"}
+                          value="map"
+                          onChange={() => setView("map")}
+                          disabled
+                          size="sm"
+                        >
+                          🗺️ Map
+                        </ToggleButton>
+                      </ButtonGroup>
+                    </Col>
+
+                    {/* Hotel Name Search */}
+                    <Col lg={3} md={6}>
+                      <Form.Group className="hotel-search-bar">
+                        <Form.Label className="mb-1 small fw-semibold">
+                          <FaSearch className="me-1 text-info" />
+                          Hotel Name
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Search hotels by name..."
+                          className="form-control-modern-sm"
+                          value={hotelSearchTerm}
+                          onChange={(e) => setHotelSearchTerm(e.target.value)}
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    {/* Star Rating Filter */}
+                    <Col lg={2} md={6}>
+                      <Form.Group>
+                        <Form.Label className="mb-1 small fw-semibold">
+                          <FaStar className="me-1 text-warning" />
+                          Star Rating
+                        </Form.Label>
+                        <Select
+                          isMulti
+                          options={starOptions}
+                          value={starRating}
+                          onChange={setStarRating}
+                          placeholder="All Stars"
+                          className="modern-select-sm"
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    {/* Hotel Type Filter */}
+                    <Col lg={2} md={6}>
+                      <Form.Group>
+                        <Form.Label className="mb-1 small fw-semibold">
+                          <FaBuilding className="me-1 text-info" />
+                          Hotel Type
+                        </Form.Label>
+                        <Select
+                          isMulti
+                          options={hotelTypeOptions}
+                          value={hotelType}
+                          onChange={setHotelType}
+                          placeholder="All Types"
+                          className="modern-select-sm"
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    {/* Channel Type Filter */}
+                    <Col lg={2} md={6}>
+                      <Form.Group>
+                        <Form.Label className="mb-1 small fw-semibold">
+                          <FaGlobe className="me-1 text-success" />
+                          Channel
+                        </Form.Label>
+                        <Select
+                          isMulti
+                          options={channelTypeOptions}
+                          value={channelType}
+                          onChange={setChannelType}
+                          placeholder="All Channels"
+                          className="modern-select-sm"
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    {/* Sort Options */}
+                    <Col lg={2} md={6}>
+                      <Form.Group>
+                        <Form.Label className="mb-1 small fw-semibold">
+                          <FaSort className="me-1 text-secondary" />
+                          Sort By
+                        </Form.Label>
+                        <Form.Select
+                          size="sm"
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="form-control-modern-sm"
+                        >
+                          <option value="priceAsc">Price: Low to High</option>
+                          <option value="priceDesc">Price: High to Low</option>
+                          <option value="ratingDesc">
+                            Rating: High to Low
+                          </option>
+                          <option value="ratingAsc">Rating: Low to High</option>
+                          <option value="nameAsc">Name: A-Z</option>
+                          <option value="nameDesc">Name: Z-A</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </Card.Body>
               </Card>
 
-              {view === "card" && (
-                <Row xs={1} md={2} xl={3} className="g-4">
-                  {isLoading &&
-                    Array.from({ length: pageSize }).map((_, idx) => (
-                      <Col key={`sk-${idx}`}>
-                        <Card className="shadow-sm rounded-xl h-100">
-                          <div className="ratio ratio-16x9 rounded-top overflow-hidden">
-                            <div className="skeleton w-100 h-100" />
-                          </div>
-                          <Card.Body>
-                            <Placeholder
-                              as="div"
-                              animation="wave"
-                              className="mb-2"
-                            >
-                              <Placeholder xs={8} />
-                            </Placeholder>
-                            <Placeholder
-                              as="div"
-                              animation="wave"
-                              className="mb-3"
-                            >
-                              <Placeholder xs={5} />
-                            </Placeholder>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <Placeholder as="div" animation="wave">
-                                <Placeholder xs={3} />
-                              </Placeholder>
-                              <Button disabled className="btn-green">
-                                View Rooms
-                              </Button>
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  {!isLoading &&
-                    pageItems.map((hotel) => (
-                      <Col key={hotel.id}>
-                        <Card className="shadow-sm rounded-xl h-100 lazy-card">
+              {/* Loading State */}
+              {isLoading && (
+                <Card className="shadow-sm rounded-xl mb-4">
+                  <Card.Body className="text-center py-5">
+                    <div className="loading-animation mb-3">
+                      <Spinner animation="border" variant="primary" size="lg" />
+                    </div>
+                    <h4 className="text-primary fw-bold">
+                      Searching the Best Results...
+                    </h4>
+                    <p className="text-muted">
+                      Please wait while we find the perfect hotels for you
+                    </p>
+                  </Card.Body>
+                </Card>
+              )}
+
+              {/* Search Results */}
+              {view === "card" && !isLoading && (
+                <Row xs={1} md={2} xl={3} className="g-3">
+                  {pageItems.map((hotel) => (
+                    <Col key={hotel.id}>
+                      <Card className="shadow-sm rounded-xl h-100 hotel-card-modern">
+                        <div className="hotel-image-container">
                           <LazyImage src={hotel.image} alt={hotel.name} />
-                          <Card.Body>
-                            <div className="h5 mb-1">{hotel.name}</div>
-                            <div className="text-muted mb-2">{hotel.city}</div>
-                            <div className="text-muted mb-2">Rating: {hotel.rating} stars</div>
-                            <Badge
-                              bg="success"
-                              className="mb-3"
-                              style={{
-                                backgroundColor: "#dcfce7",
-                                color: "#166534",
-                              }}
-                            >
-                              {hotel.badge}
-                            </Badge>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="h5 mb-0">
-                                {hotel.price
-                                  ? `AED${hotel.price.toLocaleString()}`
-                                  : "Price Unavailable"}
-                              </div>
-                              <Button className="btn-green">View Rooms</Button>
+                          <div className="hotel-rating-badge">
+                            <FaStar className="text-warning me-1" />
+                            {hotel.rating}
+                          </div>
+                        </div>
+                        <Card.Body className="p-3">
+                          <h6 className="hotel-name mb-2 fw-bold">
+                            {hotel.name}
+                          </h6>
+                          <p className="hotel-location mb-2 text-muted small">
+                            📍 {hotel.city}
+                          </p>
+                          <Badge bg="success" className="mb-3 hotel-badge">
+                            {hotel.badge}
+                          </Badge>
+                          <div className="hotel-price-section">
+                            <div className="hotel-price">
+                              {hotel.price
+                                ? `Starts from AED ${hotel.price.toLocaleString()}`
+                                : "Price Unavailable"}
                             </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
+                            <Button className="btn-view-rooms" size="sm">
+                              View Rooms
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+
                   {pageItems.length === 0 && (
                     <Col>
                       <Card className="shadow-sm rounded-xl">
                         <Card.Body className="text-center text-muted py-5">
-                          No results match filters.
+                          <FaSearch className="display-4 text-muted mb-3" />
+                          <h5>No results found</h5>
+                          <p>Try adjusting your filters or search criteria.</p>
                         </Card.Body>
                       </Card>
                     </Col>
@@ -788,10 +1020,12 @@ export default function HotelSearch() {
                 </Row>
               )}
 
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-                <small className="text-muted">
+              {/* Pagination */}
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
+                <small className="text-muted fw-semibold">
                   Showing {pageItems.length > 0 ? pageIndex * pageSize + 1 : 0}-
-                  {pageIndex * pageSize + pageItems.length} of {totalElements}
+                  {pageIndex * pageSize + pageItems.length} of {totalElements}{" "}
+                  results
                 </small>
                 <Pagination className="mb-0 pagination-modern">
                   <Pagination.Prev

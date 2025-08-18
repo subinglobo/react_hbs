@@ -28,7 +28,7 @@ export default function AdminDashboard(){
       <div className="d-flex flex-grow-1">
         <Sidebar />
         <main className="flex-grow-1 p-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="mb-4">
           {/* <h1 className="h3">Admin </h1> */}
           <div className="d-flex flex-wrap gap-2">
             <Button className="btn-indigo" onClick={()=>navigate('/hotels/new')}>Add New Hotel</Button>
