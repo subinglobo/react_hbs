@@ -20,6 +20,7 @@ export default function MarkupType() {
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -220,6 +221,20 @@ export default function MarkupType() {
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <span className="fw-semibold">Markup Type</span>
+               {/* MarkupType Search */}
+               <Form.Group className="hotel-search-bar">
+                  <Form.Control
+                    type="text"
+                    placeholder="Search markuptype..."
+                    className="form-control-modern-sm"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      fetchMarkupTypeList(0, value); // pass value to API
+                    }}
+                  />
+                </Form.Group>
               <Button className="btn-green" onClick={openCreate}>
                 + Create
               </Button>

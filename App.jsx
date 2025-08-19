@@ -20,6 +20,7 @@ import HotelBookingList from "./pages/list/HotelBookingList";
 import Bank from "./pages/master/Bank";
 import ContactType from "./pages/master/ContactType";
 import MarkupType from "./pages/master/MarkupType";
+import Currency from "./pages/master/Currency";
 
 
 export default function App() {
@@ -105,6 +106,7 @@ export default function App() {
         <Route path="/masters/bank" element={<Bank />} />
          <Route path="/masters/contact-type" element={<ContactType />} />
          <Route path="/masters/markup-type" element={<MarkupType />} />
+         <Route path="/masters/currency" element={<Currency />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
         <Route path="/masters/destination" element={<Destination />} />
 

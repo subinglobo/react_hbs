@@ -17,6 +17,7 @@ export default function Designations() {
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(null);
 
   const nextId = useMemo(
     () => Math.max(0, ...items.map((i) => i.id)) + 1,
@@ -214,6 +215,20 @@ export default function Designations() {
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <span className="fw-semibold">Designations</span>
+              {/* Designation Name Search */}
+               <Form.Group className="hotel-search-bar">
+                  <Form.Control
+                    type="text"
+                    placeholder="Search designation by name..."
+                    className="form-control-modern-sm"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      fetchDesignationList(0, value); // pass value to API
+                    }}
+                  />
+                </Form.Group>
               <Button className="btn-indigo" onClick={openCreate}>
                 + Create
               </Button>

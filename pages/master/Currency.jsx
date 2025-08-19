@@ -1,41 +1,50 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Button, Table, Modal, Form, Pagination } from "react-bootstrap";
+import {
+  Card,
+  Button,
+  Table,
+  Modal,
+  Form,
+  Pagination,
+  Col,
+} from "react-bootstrap";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/TopBar";
 import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
 
-export default function ContactType() {
+export default function Currency() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("");
+  const [currencyValue, setCurrencyValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(null);
-
-  const nextId = useMemo(
-    () => Math.max(0, ...items.map((i) => i.id)) + 1,
-    [items]
-  );
+  const [currencySearchTerm, setCurrencySearchTerm] = useState("");
 
   const openCreate = () => {
     setEditing(null);
     setName("");
     setError("");
+    setCurrencyCode("");
+    setCurrencyValue("");
     setShowModal(true);
   };
 
   const openEdit = (item) => {
+    setShowModal(true);
     setEditing(item);
     setName(item.name);
-    setShowModal(true);
+    setCurrencyCode(item.currencyCode);
+    setCurrencyValue(item.value);
   };
 
   const handleEdit = async () => {
@@ -43,24 +52,24 @@ export default function ContactType() {
 
     try {
       setIsLoading(true);
-      const editRes = await axiosInstance.put(
-        `/api/contacttype/${editing.contacttypeId}`,
-        {
-          name: name,
-        }
-      );
+      const editRes = await axiosInstance.put(`/api/currency/${editing.id}`, {
+        name: name,
+        currencyCode: currencyCode,
+        value: currencyValue,
+      });
 
-     if (editRes.data) {
-        toast.success("Contact Type Updated Successfully!");
+      console.log("editRes::", editRes);
+
+      if (editRes.data) {
+        toast.success("Currency Updated Successfully!");
         // First refresh the list
-        await fetchContactTypeList(page, search);
+        await fetchCurrencyList(page, search);
         // Then close modal and reset state
         closeModal();
       }
     } catch (error) {
-      
-      setError("Failed to update Contact Type");
-      toast.error("Failed to update Contact Type");
+      setError("Failed to update Currency");
+      toast.error("Failed to update Currency");
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +79,15 @@ export default function ContactType() {
     setShowModal(false);
     setEditing(null);
     setName("");
+    setCurrencyCode("");
+    setCurrencyValue("");
     setError("");
   };
 
-  const fetchContactTypeList = async (pageNum = 0, searchTerm = search) => {
+  const fetchCurrencyList = async (
+    pageNum = 0,
+    currencySearchTerm = search
+  ) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -81,15 +95,15 @@ export default function ContactType() {
         limit: "10",
       });
 
-      if (searchTerm && searchTerm.trim()) {
-        params.append("search", searchTerm.trim());
+      console.log("currencySearchTerm::", search);
+
+      if (currencySearchTerm && currencySearchTerm.trim()) {
+          params.append("search", " " + currencySearchTerm.trim());
       }
 
-      const res = await axiosInstance.get(
-        `/api/contacttype?${params.toString()}` 
-      );
-     
-     // Check if response has data and pagination info
+      const res = await axiosInstance.get(`/api/currency?${params.toString()}`);
+
+      // Check if response has data and pagination info
       if (res.data && Array.isArray(res.data)) {
         setItems(res.data);
         // Since backend doesn't return totalPages, we'll calculate it based on data length
@@ -109,7 +123,7 @@ export default function ContactType() {
         setPage(0);
       }
     } catch (err) {
-      toast.error("Failed to load contact types");
+      toast.error("Failed to load Currency");
       setItems([]);
       setTotalPages(0);
       setPage(0);
@@ -118,33 +132,36 @@ export default function ContactType() {
     }
   };
 
-  const saveContactType = async () => {
+  const saveCurrency = async () => {
     try {
       setIsLoading(true);
-      const contacttypePayload = { 
-                                name: `${name}` 
-                          };
-      const ContactTypeSaveRes = await axiosInstance.post(
-        "/api/contacttype/saveContactType",
-        contacttypePayload
+      const currenctReq = {
+        name: `${name}`,
+        value: `${currencyValue}`,
+        currencyCode: `${currencyCode}`,
+      };
+
+      const saveRes = await axiosInstance.post(
+        "/api/currency/saveCurrency",
+        currenctReq
       );
-      if (ContactTypeSaveRes.data !== 0) {
-        toast.success("Contact Type added Successfully!");
+      if (saveRes.data !== 0) {
+        toast.success("Currency added Successfully!");
         // First refresh the list
-        await fetchContactTypeList(page, search);
+        await fetchCurrencyList(page, search);
         // Then close modal
         closeModal();
       }
     } catch (error) {
       setError("Sorry! Data not saved to db..");
-      toast.error("Failed to save contacttype data");
+      toast.error("Failed to save currency data");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchContactTypeList();
+    fetchCurrencyList();
   }, []);
 
   // Debounced search effect
@@ -157,12 +174,12 @@ export default function ContactType() {
     // Set new timeout for search
     if (search !== "") {
       const timeout = setTimeout(() => {
-        fetchContactTypeList(0, search);
+        fetchCurrencyList(0, search);
       }, 500); // 500ms delay
       setSearchTimeout(timeout);
     } else if (search === "") {
       // If search is cleared, fetch all data
-      fetchContactTypeList(0, "");
+      fetchCurrencyList(0, "");
     }
 
     // Cleanup timeout on unmount
@@ -174,8 +191,7 @@ export default function ContactType() {
   }, [search]);
 
   const handleDelete = (item) => {
-
-      Swal.fire({
+    Swal.fire({
       title: `Are you sure? You want to delete ${item.name}`,
       icon: "warning",
       showCancelButton: true,
@@ -190,13 +206,13 @@ export default function ContactType() {
     }).then((result) => {
       if (result.isConfirmed) {
         axiosInstance
-          .delete(`/api/contacttype/${item.contacttypeId}`)
+          .delete(`/api/currency/${item.id}`)
           .then(() => {
-            toast.success("Contact Type deleted successfully");
-            fetchContactTypeList(page, search);
+            toast.success("Currency deleted successfully");
+            fetchCurrencyList(page, search);
           })
           .catch(() => {
-            toast.error("Sorry!!Contact Type not deleted");
+            toast.error("Sorry!!Currency not deleted");
           });
       }
     });
@@ -210,21 +226,23 @@ export default function ContactType() {
         <main className="flex-grow-1 p-4">
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">Contact Type</span>
-              {/* ContactType Search */}
-               <Form.Group className="hotel-search-bar">
+              <span className="fw-semibold">Currency</span>
+              {/* Currency Name Search */}
+              <Col lg={3} md={6}>
+                <Form.Group className="hotel-search-bar">
                   <Form.Control
                     type="text"
-                    placeholder="Search contacttype...."
+                    placeholder="Search currency by name..."
                     className="form-control-modern-sm"
-                    value={searchTerm}
+                    value={currencySearchTerm}
                     onChange={(e) => {
                       const value = e.target.value;
-                      setSearchTerm(value);
-                      fetchContactTypeList(0, value); // pass value to API
+                      setCurrencySearchTerm(value);
+                      fetchCurrencyList(0, value); // pass value to API
                     }}
                   />
                 </Form.Group>
+              </Col>
               <Button className="btn-green" onClick={openCreate}>
                 + Create
               </Button>
@@ -234,15 +252,19 @@ export default function ContactType() {
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>Contact Type</th>
+                    <th>Currency</th>
+                    <th>Currency Code</th>
+                    <th>Value</th>
                     <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, index) => (
-                    <tr key={item.contacttypeId}>
+                    <tr key={item.currencyId}>
                       <td>{index + 1 + page * 10}</td>
                       <td>{item.name}</td>
+                      <td>{item.currencyCode}</td>
+                      <td>{item.value}</td>
                       <td>
                         <div className="d-flex gap-2">
                           <FaEdit
@@ -270,14 +292,14 @@ export default function ContactType() {
                         >
                           <span className="visually-hidden">Loading...</span>
                         </div>
-                        Loading available contact types...
+                        Loading available currencies...
                       </td>
                     </tr>
                   )}
                   {items.length === 0 && !isLoading && (
                     <tr>
                       <td colSpan={3} className="text-center text-muted py-4">
-                        No contact types found.
+                        No currencies found.
                       </td>
                     </tr>
                   )}
@@ -289,27 +311,27 @@ export default function ContactType() {
                 <div className="d-flex justify-content-between align-items-center p-3 border-top">
                   <div>
                     <small className="text-muted">
-                      Showing {items.length} of {totalPages * 10} contact types.
+                      Showing {items.length} of {totalPages * 10} currencies.
                     </small>
                   </div>
                   <div>
                     <Pagination className="mb-0">
                       <Pagination.Prev
                         disabled={page === 0}
-                        onClick={() => fetchContactTypeList(page - 1, search)}
+                        onClick={() => fetchCurrencyList(page - 1, search)}
                       />
                       {[...Array(totalPages).keys()].map((num) => (
                         <Pagination.Item
                           key={num}
                           active={num === page}
-                          onClick={() => fetchContactTypeList(num, search)}
+                          onClick={() => fetchCurrencyList(num, search)}
                         >
                           {num + 1}
                         </Pagination.Item>
                       ))}
                       <Pagination.Next
                         disabled={page === totalPages - 1}
-                        onClick={() => fetchContactTypeList(page + 1, search)}
+                        onClick={() => fetchCurrencyList(page + 1, search)}
                       />
                     </Pagination>
                   </div>
@@ -321,17 +343,47 @@ export default function ContactType() {
           <Modal show={showModal} onHide={closeModal} centered>
             <Modal.Header closeButton={!isLoading}>
               <Modal.Title>
-                {editing ? "Update Contact Type" : "Create Contact Type"}
+                {editing ? "Update Currency" : "Create Currency"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Contact Type Name</Form.Label>
+                  <Form.Label>Currency</Form.Label>
                   <Form.Control
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter Contact Type name"
+                    isInvalid={!!error}
+                  />
+
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Currecncy Code</Form.Label>
+                  <Form.Control
+                    value={currencyCode}
+                    onChange={(e) => setCurrencyCode(e.target.value)}
+                    placeholder="Enter Currency Code"
+                    autoFocus
+                    isInvalid={!!error}
+                  />
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Value</Form.Label>
+                  <Form.Control
+                    value={currencyValue}
+                    onChange={(e) => setCurrencyValue(e.target.value)}
+                    placeholder="Enter Value"
                     autoFocus
                     isInvalid={!!error}
                   />
@@ -353,7 +405,7 @@ export default function ContactType() {
               </Button>
               <Button
                 className="btn-indigo"
-                onClick={editing ? handleEdit : saveContactType}
+                onClick={editing ? handleEdit : saveCurrency}
                 disabled={isLoading}
               >
                 {isLoading ? (
