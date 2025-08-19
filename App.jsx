@@ -18,6 +18,8 @@ import Designations from "./pages/master/Designation";
 import HotelSearch from "./pages/HotelSearch";
 import HotelBookingList from "./pages/list/HotelBookingList";
 import Bank from "./pages/master/Bank";
+import ContactType from "./pages/master/ContactType";
+import MarkupType from "./pages/master/MarkupType";
 
 
 export default function App() {
@@ -101,8 +103,11 @@ export default function App() {
         />
         <Route path="/masters/designations" element={<Designations />} />
         <Route path="/masters/bank" element={<Bank />} />
+         <Route path="/masters/contact-type" element={<ContactType />} />
+         <Route path="/masters/markup-type" element={<MarkupType />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
         <Route path="/masters/destination" element={<Destination />} />
+
 
       </Routes>
 
