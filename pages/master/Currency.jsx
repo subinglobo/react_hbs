@@ -352,6 +352,7 @@ export default function Currency() {
                   <Form.Label>Currency</Form.Label>
                   <Form.Control
                     value={name}
+                    placeholder="Enter currency name"
                     onChange={(e) => setName(e.target.value)}
                     isInvalid={!!error}
                   />
