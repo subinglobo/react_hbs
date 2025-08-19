@@ -17,6 +17,7 @@ import { Toaster } from "react-hot-toast";
 import Designations from "./pages/master/Designation";
 import HotelSearch from "./pages/HotelSearch";
 import HotelBookingList from "./pages/list/HotelBookingList";
+import Bank from "./pages/master/Bank";
 
 
 export default function App() {
@@ -99,8 +100,10 @@ export default function App() {
           }
         />
         <Route path="/masters/designations" element={<Designations />} />
+        <Route path="/masters/bank" element={<Bank />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
         <Route path="/masters/destination" element={<Destination />} />
+
       </Routes>
 
       {/* Toast container */}
