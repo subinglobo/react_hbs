@@ -52,7 +52,7 @@ export default function Currency() {
 
     try {
       setIsLoading(true);
-      const editRes = await axiosInstance.put(`/api/currency/${editing.id}`, {
+      const editRes = await axiosInstance.put(`/api/currency/${editing.currencyId}`, {
         name: name,
         currencyCode: currencyCode,
         value: currencyValue,
@@ -98,7 +98,7 @@ export default function Currency() {
       console.log("currencySearchTerm::", search);
 
       if (currencySearchTerm && currencySearchTerm.trim()) {
-          params.append("search", " " + currencySearchTerm.trim());
+          params.append("search",currencySearchTerm.trim());
       }
 
       const res = await axiosInstance.get(`/api/currency?${params.toString()}`);
@@ -206,7 +206,7 @@ export default function Currency() {
     }).then((result) => {
       if (result.isConfirmed) {
         axiosInstance
-          .delete(`/api/currency/${item.id}`)
+          .delete(`/api/currency/${item.currencyId}`)
           .then(() => {
             toast.success("Currency deleted successfully");
             fetchCurrencyList(page, search);
