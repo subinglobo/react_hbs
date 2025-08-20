@@ -14,6 +14,7 @@ import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
 import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import "../../styles/Swal.css";
 
 export default function Currency() {
   const [items, setItems] = useState([]);
@@ -200,7 +201,7 @@ export default function Currency() {
       confirmButtonText: "Yes, delete it!",
       customClass: {
         popup: "swal-small",
-        title: "swal-small-title",
+        title: "swal-small-title titleStyle",
         htmlContainer: "swal-small-text",
       },
     }).then((result) => {

@@ -21,6 +21,8 @@ import Bank from "./pages/master/Bank";
 import ContactType from "./pages/master/ContactType";
 import MarkupType from "./pages/master/MarkupType";
 import Currency from "./pages/master/Currency";
+import HotelRegistrationActions from "./pages/HotelRegistrationActions";
+import MarketType from "./pages/master/MarketType";
 
 
 export default function App() {
@@ -109,7 +111,9 @@ export default function App() {
          <Route path="/masters/currency" element={<Currency />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
         <Route path="/masters/destination" element={<Destination />} />
+        <Route path="/masters/market-type" element={<MarketType />} />
 
+         {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 
       </Routes>
 

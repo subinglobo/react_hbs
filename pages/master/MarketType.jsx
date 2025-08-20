@@ -5,9 +5,9 @@ import Topbar from "../../components/TopBar";
 import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
-import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
-export default function Designations() {
+export default function MarketType() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -44,25 +44,23 @@ export default function Designations() {
     try {
       setIsLoading(true);
       const editRes = await axiosInstance.put(
-        `/api/designation/${editing.designationId}`,
+        `/api/marketType/${editing.marketTypeId}`,
         {
           name: name,
         }
       );
 
-      console.log("editRes::", editRes);
-
-      if (editRes.data) {
-        toast.success("Designation Updated Successfully!");
+     if (editRes.data) {
+        toast.success("Market Type Updated Successfully!");
         // First refresh the list
-        await fetchDesignationList(page, search);
+        await fetchMarketTypeList(page, search);
         // Then close modal and reset state
         closeModal();
       }
     } catch (error) {
-      console.error("Edit error:", error);
-      setError("Failed to update designation");
-      toast.error("Failed to update designation");
+      
+      setError("Failed to update Market Type");
+      toast.error("Failed to update Market Type");
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +73,7 @@ export default function Designations() {
     setError("");
   };
 
-  const fetchDesignationList = async (pageNum = 0, searchTerm = search) => {
+  const fetchMarketTypeList = async (pageNum = 0, searchTerm = search) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -87,17 +85,13 @@ export default function Designations() {
         params.append("search", searchTerm.trim());
       }
 
-      console.log("Fetching designations with params:", params.toString());
       const res = await axiosInstance.get(
-        `/api/designation?${params.toString()}`
+        `/api/marketType?${params.toString()}`
       );
-      console.log("Designations response:", res.data);
-
-      // Check if response has data and pagination info
+     
+     // Check if response has data and pagination info
       if (res.data && Array.isArray(res.data)) {
         setItems(res.data);
-        console.log("Updated items state:", res.data);
-
         // Since backend doesn't return totalPages, we'll calculate it based on data length
         // If we get less than 10 items, it's likely the last page
         if (res.data.length < 10) {
@@ -115,8 +109,7 @@ export default function Designations() {
         setPage(0);
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load designations");
+      toast.error("Failed to load market types");
       setItems([]);
       setTotalPages(0);
       setPage(0);
@@ -125,38 +118,34 @@ export default function Designations() {
     }
   };
 
-  const saveDesignation = async () => {
+  const saveMarketType = async () => {
     try {
       setIsLoading(true);
-      const desigSaveRequest = { name: `${name}` };
-      const desigSavedData = await axiosInstance.post(
-        "/api/designation/saveDesignation",
-        desigSaveRequest
+      const marketTypepayload = { 
+                                name: `${name}` 
+                          };
+      const saveRes = await axiosInstance.post(
+        "/api/marketType/saveMarketType",
+        marketTypepayload
       );
-      if (desigSavedData.data !== 0) {
-        toast.success("Designation added Successfully!");
+      if (saveRes.data !== 0) {
+        toast.success("Market Type added Successfully!");
         // First refresh the list
-        await fetchDesignationList(page, search);
+        await fetchMarketTypeList(page, search);
         // Then close modal
         closeModal();
       }
     } catch (error) {
-      console.error("Save error:", error);
       setError("Sorry! Data not saved to db..");
-      toast.error("Failed to save designation");
+      toast.error("Failed to save market type data");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDesignationList();
+    fetchMarketTypeList();
   }, []);
-
-  // Debug: Log when items change
-  useEffect(() => {
-    console.log("Items state updated:", items);
-  }, [items]);
 
   // Debounced search effect
   useEffect(() => {
@@ -168,12 +157,12 @@ export default function Designations() {
     // Set new timeout for search
     if (search !== "") {
       const timeout = setTimeout(() => {
-        fetchDesignationList(0, search);
+        fetchMarketTypeList(0, search);
       }, 500); // 500ms delay
       setSearchTimeout(timeout);
     } else if (search === "") {
       // If search is cleared, fetch all data
-      fetchDesignationList(0, "");
+      fetchMarketTypeList(0, "");
     }
 
     // Cleanup timeout on unmount
@@ -185,8 +174,9 @@ export default function Designations() {
   }, [search]);
 
   const handleDelete = (item) => {
-    Swal.fire({
-      title: `Are you sure? You want to delete id ${item.name}`,
+
+      Swal.fire({
+      title: `Are you sure? You want to delete ${item.name}`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -200,13 +190,13 @@ export default function Designations() {
     }).then((result) => {
       if (result.isConfirmed) {
         axiosInstance
-          .delete(`/api/designation/${item.designationId}`)
+          .delete(`/api/marketType/${item.marketTypeId}`)
           .then(() => {
-            toast.success("Designation deleted successfully");
-            fetchDesignationList(page, search);
+            toast.success("Market Type deleted successfully");
+            fetchMarketTypeList(page, search);
           })
           .catch(() => {
-            toast.error("Designation not deleted");
+            toast.error("Sorry!!Market Type not deleted");
           });
       }
     });
@@ -220,81 +210,37 @@ export default function Designations() {
         <main className="flex-grow-1 p-4">
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">Designations</span>
-              {/* Designation Name Search */}
-              <Form.Group className="hotel-search-bar">
-                <Form.Control
-                  type="text"
-                  placeholder="Search designation by name..."
-                  className="form-control-modern-sm"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSearchTerm(value);
-                    fetchDesignationList(0, value); // pass value to API
-                  }}
-                />
-              </Form.Group>
-              <Button className="btn-indigo" onClick={openCreate}>
+              <span className="fw-semibold">Market Type</span>
+              {/* Market Type Name Search */}
+               <Form.Group className="hotel-search-bar">
+                  <Form.Control
+                    type="text"
+                    placeholder="Search market type by name..."
+                    className="form-control-modern-sm"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      fetchMarketTypeList(0, value); // pass value to API
+                    }}
+                  />
+                </Form.Group>
+              <Button className="btn-green" onClick={openCreate}>
                 + Create
               </Button>
             </Card.Header>
             <Card.Body className="p-0">
-              {/* Search Bar */}
-              {/* <div className="p-3 border-bottom">
-                <div className="row align-items-center">
-                  <div className="col-md-6">
-                    <div className="input-group">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search designations..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            fetchDesignationList(0, search);
-                          }
-                        }}
-                      />
-                      <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        onClick={() => fetchDesignationList(0, search)}
-                      >
-                        Search
-                      </button>
-                      {search && (
-                        <button
-                          className="btn btn-outline-danger"
-                          type="button"
-                          onClick={() => {
-                            setSearch("");
-                            fetchDesignationList(0, "");
-                          }}
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                                     <div className="col-md-6">
-                    
-                   </div>
-                </div>
-              </div> */}{" "}
-              {/* Results counter moved to pagination section */}
               <Table responsive hover striped className="mb-0 align-middle">
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>Designation</th>
+                    <th>Market Type</th>
                     <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, index) => (
-                    <tr key={item.designationId}>
+                    <tr key={item.bankId}>
                       <td>{index + 1 + page * 10}</td>
                       <td>{item.name}</td>
                       <td>
@@ -324,45 +270,46 @@ export default function Designations() {
                         >
                           <span className="visually-hidden">Loading...</span>
                         </div>
-                        Loading designations...
+                        Loading available market types...
                       </td>
                     </tr>
                   )}
                   {items.length === 0 && !isLoading && (
                     <tr>
                       <td colSpan={3} className="text-center text-muted py-4">
-                        No designations found.
+                        No market types found.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </Table>
+
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="d-flex justify-content-between align-items-center p-3 border-top">
                   <div>
                     <small className="text-muted">
-                      Showing {items.length} of {totalPages * 10} designations
+                      Showing {items.length} of {totalPages * 10} market types
                     </small>
                   </div>
                   <div>
                     <Pagination className="mb-0">
                       <Pagination.Prev
                         disabled={page === 0}
-                        onClick={() => fetchDesignationList(page - 1, search)}
+                        onClick={() => fetchMarketTypeList(page - 1, search)}
                       />
                       {[...Array(totalPages).keys()].map((num) => (
                         <Pagination.Item
                           key={num}
                           active={num === page}
-                          onClick={() => fetchDesignationList(num, search)}
+                          onClick={() => fetchMarketTypeList(num, search)}
                         >
                           {num + 1}
                         </Pagination.Item>
                       ))}
                       <Pagination.Next
                         disabled={page === totalPages - 1}
-                        onClick={() => fetchDesignationList(page + 1, search)}
+                        onClick={() => fetchMarketTypeList(page + 1, search)}
                       />
                     </Pagination>
                   </div>
@@ -374,17 +321,17 @@ export default function Designations() {
           <Modal show={showModal} onHide={closeModal} centered>
             <Modal.Header closeButton={!isLoading}>
               <Modal.Title>
-                {editing ? "Edit Designation" : "Create Designation"}
+                {editing ? "Update Market Type" : "Create Market Type"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Designation Name</Form.Label>
+                  <Form.Label>Market Type</Form.Label>
                   <Form.Control
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter designation name"
+                    placeholder="Enter market type name"
                     autoFocus
                     isInvalid={!!error}
                   />
@@ -406,7 +353,7 @@ export default function Designations() {
               </Button>
               <Button
                 className="btn-indigo"
-                onClick={editing ? handleEdit : saveDesignation}
+                onClick={editing ? handleEdit : saveMarketType}
                 disabled={isLoading}
               >
                 {isLoading ? (
