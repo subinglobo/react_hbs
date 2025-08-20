@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-export default function MarketType() {
+export default function Region() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -44,23 +44,23 @@ export default function MarketType() {
     try {
       setIsLoading(true);
       const editRes = await axiosInstance.put(
-        `/api/marketType/${editing.marketTypeId}`,
+        `/api/region/${editing.id}`,
         {
           name: name,
         }
       );
 
      if (editRes.data) {
-        toast.success("Market Type Updated Successfully!");
+        toast.success("Region Updated Successfully!");
         // First refresh the list
-        await fetchMarketTypeList(page, search);
+        await fetchRegionList(page, search);
         // Then close modal and reset state
         closeModal();
       }
     } catch (error) {
       
-      setError("Failed to update Market Type");
-      toast.error("Failed to update Market Type");
+      setError("Failed to update region");
+      toast.error("Failed to update region");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +73,7 @@ export default function MarketType() {
     setError("");
   };
 
-  const fetchMarketTypeList = async (pageNum = 0, searchTerm = search) => {
+  const fetchRegionList = async (pageNum = 0, searchTerm = search) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -86,7 +86,7 @@ export default function MarketType() {
       }
 
       const res = await axiosInstance.get(
-        `/api/marketType?${params.toString()}`
+        `/api/region?${params.toString()}`
       );
      
      // Check if response has data and pagination info
@@ -109,7 +109,7 @@ export default function MarketType() {
         setPage(0);
       }
     } catch (err) {
-      toast.error("Failed to load market types");
+      toast.error("Failed to load regions");
       setItems([]);
       setTotalPages(0);
       setPage(0);
@@ -118,33 +118,33 @@ export default function MarketType() {
     }
   };
 
-  const saveMarketType = async () => {
+  const saveRegion = async () => {
     try {
       setIsLoading(true);
-      const marketTypepayload = { 
+      const regionReq = { 
                                 name: `${name}` 
                           };
       const saveRes = await axiosInstance.post(
-        "/api/marketType/saveMarketType",
-        marketTypepayload
+        "/api/region/saveRegion",
+        regionReq
       );
       if (saveRes.data !== 0) {
-        toast.success("Market Type added Successfully!");
+        toast.success("Region added Successfully!");
         // First refresh the list
-        await fetchMarketTypeList(page, search);
+        await fetchRegionList(page, search);
         // Then close modal
         closeModal();
       }
     } catch (error) {
       setError("Sorry! Data not saved to db..");
-      toast.error("Failed to save market type data");
+      toast.error("Failed to save bank data");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMarketTypeList();
+    fetchRegionList();
   }, []);
 
   // Debounced search effect
@@ -157,12 +157,12 @@ export default function MarketType() {
     // Set new timeout for search
     if (search !== "") {
       const timeout = setTimeout(() => {
-        fetchMarketTypeList(0, search);
+        fetchRegionList(0, search);
       }, 500); // 500ms delay
       setSearchTimeout(timeout);
     } else if (search === "") {
       // If search is cleared, fetch all data
-      fetchMarketTypeList(0, "");
+      fetchRegionList(0, "");
     }
 
     // Cleanup timeout on unmount
@@ -190,13 +190,13 @@ export default function MarketType() {
     }).then((result) => {
       if (result.isConfirmed) {
         axiosInstance
-          .delete(`/api/marketType/${item.marketTypeId}`)
+          .delete(`/api/region/${item.id}`)
           .then(() => {
-            toast.success("Market Type deleted successfully");
-            fetchMarketTypeList(page, search);
+            toast.success("Region deleted successfully");
+            fetchRegionList(page, search);
           })
           .catch(() => {
-            toast.error("Sorry!!Market Type not deleted");
+            toast.error("Sorry!!Region not deleted");
           });
       }
     });
@@ -210,18 +210,18 @@ export default function MarketType() {
         <main className="flex-grow-1 p-4">
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">Market Type</span>
-              {/* Market Type Name Search */}
+              <span className="fw-semibold">Region</span>
+              {/* Region Name Search */}
                <Form.Group className="hotel-search-bar">
                   <Form.Control
                     type="text"
-                    placeholder="Search market type by name..."
+                    placeholder="Search region by name..."
                     className="form-control-modern-sm"
                     value={searchTerm}
                     onChange={(e) => {
                       const value = e.target.value;
                       setSearchTerm(value);
-                      fetchMarketTypeList(0, value); // pass value to API
+                      fetchRegionList(0, value); // pass value to API
                     }}
                   />
                 </Form.Group>
@@ -234,13 +234,13 @@ export default function MarketType() {
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>Market Type</th>
+                    <th>Region Name</th>
                     <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, index) => (
-                    <tr key={item.marketTypeId}>
+                    <tr key={item.id}>
                       <td>{index + 1 + page * 10}</td>
                       <td>{item.name}</td>
                       <td>
@@ -270,14 +270,14 @@ export default function MarketType() {
                         >
                           <span className="visually-hidden">Loading...</span>
                         </div>
-                        Loading available market types...
+                        Loading available regions...
                       </td>
                     </tr>
                   )}
                   {items.length === 0 && !isLoading && (
                     <tr>
                       <td colSpan={3} className="text-center text-muted py-4">
-                        No market types found.
+                        No regions found.
                       </td>
                     </tr>
                   )}
@@ -289,27 +289,27 @@ export default function MarketType() {
                 <div className="d-flex justify-content-between align-items-center p-3 border-top">
                   <div>
                     <small className="text-muted">
-                      Showing {items.length} of {totalPages * 10} market types
+                      Showing {items.length} of {totalPages * 10} regions
                     </small>
                   </div>
                   <div>
                     <Pagination className="mb-0">
                       <Pagination.Prev
                         disabled={page === 0}
-                        onClick={() => fetchMarketTypeList(page - 1, search)}
+                        onClick={() => fetchRegionList(page - 1, search)}
                       />
                       {[...Array(totalPages).keys()].map((num) => (
                         <Pagination.Item
                           key={num}
                           active={num === page}
-                          onClick={() => fetchMarketTypeList(num, search)}
+                          onClick={() => fetchRegionList(num, search)}
                         >
                           {num + 1}
                         </Pagination.Item>
                       ))}
                       <Pagination.Next
                         disabled={page === totalPages - 1}
-                        onClick={() => fetchMarketTypeList(page + 1, search)}
+                        onClick={() => fetchRegionList(page + 1, search)}
                       />
                     </Pagination>
                   </div>
@@ -321,17 +321,17 @@ export default function MarketType() {
           <Modal show={showModal} onHide={closeModal} centered>
             <Modal.Header closeButton={!isLoading}>
               <Modal.Title>
-                {editing ? "Update Market Type" : "Create Market Type"}
+                {editing ? "Update Region" : "Create BankRegion"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Market Type</Form.Label>
+                  <Form.Label>Region Name</Form.Label>
                   <Form.Control
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter market type name"
+                    placeholder="Enter region name"
                     autoFocus
                     isInvalid={!!error}
                   />
@@ -353,7 +353,7 @@ export default function MarketType() {
               </Button>
               <Button
                 className="btn-indigo"
-                onClick={editing ? handleEdit : saveMarketType}
+                onClick={editing ? handleEdit : saveRegion}
                 disabled={isLoading}
               >
                 {isLoading ? (

@@ -23,6 +23,7 @@ import MarkupType from "./pages/master/MarkupType";
 import Currency from "./pages/master/Currency";
 import HotelRegistrationActions from "./pages/HotelRegistrationActions";
 import MarketType from "./pages/master/MarketType";
+import Region from "./pages/master/Region";
 
 
 export default function App() {
@@ -112,6 +113,7 @@ export default function App() {
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
         <Route path="/masters/destination" element={<Destination />} />
         <Route path="/masters/market-type" element={<MarketType />} />
+        <Route path="/masters/region" element={<Region />} />
 
          {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 
