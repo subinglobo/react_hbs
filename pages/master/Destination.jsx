@@ -1,41 +1,37 @@
-
-import React, { useEffect, useState } from "react";
-import { Card, Table, Button, Modal, Form } from "react-bootstrap";
-import axiosInstance from "../../components/AxiosInstance";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, Button, Table, Modal, Form, Pagination } from "react-bootstrap";
 import Sidebar from "../../components/Sidebar";
-import TopBar from "../../components/TopBar";
+import Topbar from "../../components/TopBar";
+import axiosInstance from "../../components/AxiosInstance";
+import { toast } from "react-hot-toast";
+import Swal from "sweetalert2";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import axios from "axios";
 
-export default function Destination(){
-  const [places, setPlaces] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+export default function Country() {
+  const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [country, setCountry] = useState("");
-  const [stateName, setStateName] = useState("");
   const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
-  // Pagination: fixed 10 rows per page
-  const [page, setPage] = useState(1);
-  const perPage = 10;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [search, setSearch] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [country, setCountry] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [state, setState] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [destinationCode, setDestinationCode] = useState([]);
 
-  const fetchDestinations = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get("/api/destination");
-      setPlaces(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.log("error::", error);
-      setPlaces([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const nextId = useMemo(
+    () => Math.max(0, ...items.map((i) => i.id)) + 1,
+    [items]
+  );
 
-  useEffect(() => {
-    fetchDestinations();
-  }, []);
-
-  const openCreate = () => {
+ const openCreate = () => {
     setEditing(null);
     setCountry("");
     setStateName("");
@@ -51,168 +47,422 @@ export default function Destination(){
     setShowModal(true);
   };
 
-  const closeModal = () => setShowModal(false);
+  const handleEdit = async () => {
+    if (!editing) return;
+
+    try {
+      setIsLoading(true);
+      const editRes = await axiosInstance.put(`/api/destination/${editing.id}`, {
+        countryId: `${selectedCountry}`,
+        stateId : `${selectedState}`,
+        name : `${name}`,
+        placeCode : `${destinationCode}`
+      });
+
+      if (editRes.data) {
+        toast.success("Destination Updated Successfully!");
+        // First refresh the list
+        await fetchDestinationList(page, search);
+        // Then close modal and reset state
+        closeModal();
+      }
+    } catch (error) {
+      setError("Failed to update destination");
+      toast.error("Failed to update destination");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setName("");
+    setError("");
+  };
+
+  const fetchDestinationList = async (pageNum = 0, searchTerm = search) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: pageNum.toString(),
+        limit: "10",
+      });
+
+      if (searchTerm && searchTerm.trim()) {
+        params.append("search", searchTerm.trim());
+      }
+
+      const res = await axiosInstance.get(`/api/destination?${params.toString()}`);
+
+      // Check if response has data and pagination info
+      if (res.data && Array.isArray(res.data)) {
+        setItems(res.data);
+        // Since backend doesn't return totalPages, we'll calculate it based on data length
+        // If we get less than 10 items, it's likely the last page
+        if (res.data.length < 10) {
+          setTotalPages(pageNum + 1);
+        } else {
+          // If we get exactly 10 items, there might be more pages
+          // We'll set a reasonable total or keep the current totalPages
+          setTotalPages(Math.max(totalPages, pageNum + 2));
+        }
+
+        setPage(pageNum);
+      } else {
+        setItems([]);
+        setTotalPages(0);
+        setPage(0);
+      }
+    } catch (err) {
+      toast.error("Failed to load destinations");
+      setItems([]);
+      setTotalPages(0);
+      setPage(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const saveDestination = async () => {
-    if (!country.trim() || !stateName.trim() || !name.trim()) return;
-    const payload = { 
-       country: country.trim(),
-       state: stateName.trim(), 
-       name: name.trim() 
-    };
-    setSaving(true);
     try {
-      if (editing && editing.id != null) {
-        await axiosInstance.put(`/api/destination/${editing.id}`, payload);
-      } else {
-        await axiosInstance.post(`/api/destination`, payload);
+      setIsLoading(true);
+      const destinationPayload = {
+        countryId: `${selectedCountry}`,
+        stateId : `${selectedState}`,
+        name : `${name}`,
+        placeCode : `${destinationCode}`
+      };
+      const saveRes = await axiosInstance.post(
+        "/api/destination/save",
+        destinationPayload
+      );
+      if (saveRes.data !== 0) {
+        toast.success("Destination added Successfully!");
+        // First refresh the list
+        await fetchCountryList(page, search);
+        // Then close modal
+        closeModal();
       }
-      await fetchDestinations();
-      setShowModal(false);
     } catch (error) {
-      console.log("save error::", error);
+      setError("Sorry! Data not saved to db..");
+      toast.error("Failed to save destination data");
     } finally {
-      setSaving(false);
+      setIsLoading(false);
     }
   };
 
-  const removeDestination = async (id) => {
-    if (!id) return;
+  // useEffect(() => {
+  //   fetchCountryList();
+  //   MarketTypeList();
+  //   RegionList();
+  // }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for search
+    if (search !== "") {
+      const timeout = setTimeout(() => {
+        fetchDestinationList(0, search);
+      }, 500); // 500ms delay
+      setSearchTimeout(timeout);
+    } else if (search === "") {
+      // If search is cleared, fetch all data
+      fetchDestinationList(0, "");
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [search]);
+
+  const handleDelete = (item) => {
+    Swal.fire({
+      title: `Are you sure? You want to delete ${item.name}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      customClass: {
+        popup: "swal-small",
+        title: "swal-small-title",
+        htmlContainer: "swal-small-text",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axiosInstance
+          .delete(`/api/destination/${item.id}`)
+          .then(() => {
+            toast.success("Destination deleted successfully");
+            fetchDestinationList(page, search);
+          })
+          .catch(() => {
+            toast.error("Sorry!!Country not deleted");
+          });
+      }
+    });
+  };
+
+  const MarketTypeList = async () => {
     try {
-      await axiosInstance.delete(`/api/destination/${id}`);
-      setPlaces((prev) => prev.filter((p) => p.id !== id));
+      const response = await axiosInstance.get("/api/marketType");
+      setMarketTypes(response.data);
     } catch (error) {
-      console.log("delete error::", error);
+      console.log("error for markettype list :", error);
     }
   };
 
-  // Pagination calculations
-  const totalPages = Math.max(1, Math.ceil(places.length / perPage));
-  const currentPage = Math.min(page, totalPages);
-  const pagedPlaces = places.slice((currentPage - 1) * perPage, currentPage * perPage);
-  const totalEntries = places.length;
-  const startEntry = totalEntries === 0 ? 0 : (currentPage - 1) * perPage + 1;
-  const endEntry = Math.min(currentPage * perPage, totalEntries);
-
-  // Windowed page numbers (5 at a time)
-  const windowSize = 5;
-  const currentWindowIndex = Math.floor((currentPage - 1) * 1 / windowSize);
-  const windowStart = currentWindowIndex * windowSize + 1;
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages);
-  const pageNumbers = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+  const RegionList = async () => {
+    try {
+      const response = await axiosInstance.get("/api/region");
+      setRegionTypes(response.data);
+    } catch (error) {
+      console.log("error for region list :", error);
+    }
+  };
 
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
-      <TopBar />
+      <Topbar />
       <div className="d-flex flex-grow-1">
         <Sidebar />
         <main className="flex-grow-1 p-4">
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">Destinations</span>
-              <Button className="btn-indigo" onClick={openCreate}>+ Create</Button>
+              <span className="fw-semibold">Country</span>
+              {/* Country Name Search */}
+              <Form.Group className="hotel-search-bar">
+                <Form.Control
+                  type="text"
+                  placeholder="Search country..."
+                  className="form-control-modern-sm"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchTerm(value);
+                    fetchCountryList(0, value); // pass value to API
+                  }}
+                />
+              </Form.Group>
+              <Button className="btn-green" onClick={openCreate}>
+                + Create
+              </Button>
             </Card.Header>
             <Card.Body className="p-0">
               <Table responsive hover striped className="mb-0 align-middle">
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>State</th>
+                    <th>Region</th>
                     <th>Country</th>
-                    <th>Destination</th>
-                    <th style={{ width: 120 }}>Actions</th>
+                    <th>Country Code</th>
+                    <th>Market Type</th>
+                    <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading && (
-                    <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">Loading...</td>
-                    </tr>
-                  )}
-                  {!isLoading && pagedPlaces.map((destination, index) => (
-                    <tr key={destination.id ?? index}>
-                      <td>{(currentPage - 1) * perPage + index + 1}</td>
-                      <td>{destination.state}</td>
-                      <td>{destination.country}</td>
-                      <td>{destination.name}</td>
+                  {items.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>{index + 1 + page * 10}</td>
+                      <td>{item.region}</td>
+                      <td>{item.name}</td>
+                      <td>{item.countryCode}</td>
+                      <td>{item.marketType}</td>
                       <td>
-                        <div className="action-icons">
-                          <button type="button" className="icon-action" title="Edit" aria-label="Edit destination" onClick={() => openEdit(destination)}>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.731 2.269a2.625 2.625 0 00-3.714 0l-1.157 1.157 3.714 3.714 1.157-1.157a2.625 2.625 0 000-3.714z"/><path d="M3 17.25V21h3.75L19.436 8.314l-3.714-3.714L3 17.25z"/></svg>
-                          </button>
-                          <button type="button" className="icon-action" title="Delete" aria-label="Delete destination" onClick={() => removeDestination(destination.id)}>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 100 2h.293l.853 10.24A2 2 0 007.138 18h5.724a2 2 0 001.992-1.76L15.707 6H16a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zm-3.707 4l.833 10h7.748l.833-10H5.293z" clipRule="evenodd"/></svg>
-                          </button>
+                        <div className="d-flex gap-2">
+                          <FaEdit
+                            className="text-primary"
+                            style={{ cursor: "pointer", fontSize: "18px" }}
+                            onClick={() => openEdit(item)}
+                            title="Edit"
+                          />
+                          <FaTrash
+                            className="text-danger"
+                            style={{ cursor: "pointer", fontSize: "18px" }}
+                            onClick={() => handleDelete(item)}
+                            title="Delete"
+                          />
                         </div>
                       </td>
                     </tr>
                   ))}
-                  {!isLoading && pagedPlaces.length === 0 && (
+                  {isLoading && (
                     <tr>
-                      <td colSpan={5} className="text-center text-muted py-4">No destinations found.</td>
+                      <td colSpan={3} className="text-center text-muted py-4">
+                        <div
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        >
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        Loading available countries...
+                      </td>
+                    </tr>
+                  )}
+                  {items.length === 0 && !isLoading && (
+                    <tr>
+                      <td colSpan={3} className="text-center text-muted py-4">
+                        No countries found.
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </Table>
-              <div className="d-flex justify-content-between align-items-center p-3 border-top">
-                <div className="text-muted small">
-                  {`Showing ${startEntry.toLocaleString()} to ${endEntry.toLocaleString()} of ${totalEntries.toLocaleString()} entries`}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-between align-items-center p-3 border-top">
+                  <div>
+                    <small className="text-muted">
+                      Showing {items.length} of {totalPages * 10} countries
+                    </small>
+                  </div>
+                  <div>
+                    <Pagination className="mb-0">
+                      <Pagination.Prev
+                        disabled={page === 0}
+                        onClick={() => fetchCountryList(page - 1, search)}
+                      />
+                      {[...Array(totalPages).keys()].map((num) => (
+                        <Pagination.Item
+                          key={num}
+                          active={num === page}
+                          onClick={() => fetchCountryList(num, search)}
+                        >
+                          {num + 1}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        disabled={page === totalPages - 1}
+                        onClick={() => fetchCountryList(page + 1, search)}
+                      />
+                    </Pagination>
+                  </div>
                 </div>
-                <div className="d-flex align-items-center gap-2">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    Previous
-                  </Button>
-                  {pageNumbers.map((num) => (
-                    <Button
-                      key={num}
-                      size="sm"
-                      variant={num === currentPage ? "primary" : "outline-secondary"}
-                      onClick={() => setPage(num)}
-                    >
-                      {num}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
+              )}
             </Card.Body>
           </Card>
 
           <Modal show={showModal} onHide={closeModal} centered>
-            <Modal.Header closeButton>
-              <Modal.Title>{editing ? 'Edit Destination' : 'Create Destination'}</Modal.Title>
+            <Modal.Header closeButton={!isLoading}>
+              <Modal.Title>
+                {editing ? "Update Country" : "Create Country"}
+              </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <Form onSubmit={(e) => { e.preventDefault(); saveDestination(); }}>
+              <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Country</Form.Label>
-                  <Form.Control value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Enter country" />
+                  <Form.Label>Market Type</Form.Label>
+                  <Form.Select
+                    name="marketTypeId"
+                    value={selectedMarketType}
+                    onChange={(e) => setSelectedMarketType(e.target.value)}
+                    isInvalid={!!error}
+                  >
+                    <option value="">Select MarketType</option>
+                    {marketTypes.map((market) => (
+                      <option key={market.marketTypeId} value={market.marketTypeId}>
+                        {market.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>State</Form.Label>
-                  <Form.Control value={stateName} onChange={(e) => setStateName(e.target.value)} placeholder="Enter state" />
+                  <Form.Label>Region</Form.Label>
+                  <Form.Select
+                    name="regionId"
+                    value={selectedRegion}
+                    onChange={(e) => setSelectedRegion(e.target.value)}
+                    isInvalid={!!error}
+                  >
+                    <option value="">Select Region</option>
+                    {regionTypes.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {region.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Country Name</Form.Label>
+                  <Form.Control
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter country name"
+                    autoFocus
+                    isInvalid={!!error}
+                  />
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Destination</Form.Label>
-                  <Form.Control value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter destination" />
+                  <Form.Label>Country Code</Form.Label>
+                  <Form.Control
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    placeholder="Enter country code"
+                    autoFocus
+                    isInvalid={!!error}
+                  />
+                  {error && (
+                    <Form.Control.Feedback type="invalid">
+                      {error}
+                    </Form.Control.Feedback>
+                  )}
                 </Form.Group>
               </Form>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={closeModal} disabled={saving}>Cancel</Button>
-              <Button className="btn-indigo" onClick={saveDestination} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+              <Button
+                variant="secondary"
+                onClick={closeModal}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="btn-indigo"
+                onClick={editing ? handleEdit : saveCountry}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    {editing ? "Updating..." : "Saving..."}
+                  </>
+                ) : editing ? (
+                  "Update"
+                ) : (
+                  "Save"
+                )}
+              </Button>
             </Modal.Footer>
           </Modal>
         </main>

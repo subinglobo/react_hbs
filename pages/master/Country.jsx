@@ -267,7 +267,10 @@ const openEdit = (item) => {
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>Country Name</th>
+                    <th>Region</th>
+                    <th>Country</th>
+                    <th>Country Code</th>
+                    <th>Market Type</th>
                     <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
@@ -275,7 +278,10 @@ const openEdit = (item) => {
                   {items.map((item, index) => (
                     <tr key={item.id}>
                       <td>{index + 1 + page * 10}</td>
+                      <td>{item.region}</td>
                       <td>{item.name}</td>
+                      <td>{item.countryCode}</td>
+                      <td>{item.marketType}</td>
                       <td>
                         <div className="d-flex gap-2">
                           <FaEdit

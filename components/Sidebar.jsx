@@ -470,7 +470,7 @@ function getIcon(label) {
       return "🏦";
     case "Assigned Agents":
       return "👥";
-    case "Calender":
+    case "Calendar":
       return "🗓️";
     case "Extranet Contract":
       return "📑";
