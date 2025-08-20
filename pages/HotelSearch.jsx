@@ -9,24 +9,34 @@ import {
   Pagination,
   ButtonGroup,
   ToggleButton,
-  Placeholder,
   Spinner,
 } from "react-bootstrap";
-import Sidebar from "../components/Sidebar"; // Ensure this file exists
-import TopBar from "../components/TopBar"; // Ensure this file exists
+import Sidebar from "../components/Sidebar";
+import TopBar from "../components/TopBar";
 import Select from "react-select";
-import axiosInstance from "../components/AxiosInstance"; // Ensure this file exists
+import axiosInstance from "../components/AxiosInstance";
 import {
   FaLightbulb,
   FaSearch,
-  FaFilter,
   FaSort,
   FaStar,
   FaBuilding,
   FaGlobe,
 } from "react-icons/fa";
 import axios from "axios";
-import "../styles/HotelSearch.css"; // Ensure this CSS file exists
+import "../styles/HotelSearch.css";
+
+// Helper function to merge results with deduplication
+const mergeResults = (existing, incoming, searchId) => {
+  const map = new Map(existing.map((h) => [h.id, h]));
+  incoming.forEach((hotel, index) => {
+      const uniqueId = hotel.hotelCode
+      ? `${searchId}-${hotel.hotelCode}`
+      : `${searchId}-h${index + 1}`;
+    map.set(uniqueId, { ...map.get(uniqueId), ...hotel, id: uniqueId });
+  });
+  return Array.from(map.values());
+};
 
 function RoomGuestSelector({ value, onChange }) {
   const [rooms, setRooms] = useState(value);
@@ -224,13 +234,46 @@ export default function HotelSearch() {
   ]);
   const [roomsOpen, setRoomsOpen] = useState(false);
 
-  // New filter states
+  // Filter states
   const [starRating, setStarRating] = useState([]);
   const [hotelType, setHotelType] = useState([]);
   const [channelType, setChannelType] = useState([]);
   const [sortBy, setSortBy] = useState("priceAsc");
   const [hotelSearchTerm, setHotelSearchTerm] = useState("");
   const [errors, setErrors] = useState({});
+
+  const [allResults, setAllResults] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [view, setView] = useState("card");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(9);
+  const [hasSearchResult, setHasSearchResult] = useState(false);
+  const [pollStatus, setPollStatus] = useState("IDLE");
+  const [pollCount, setPollCount] = useState(0);
+
+  // Filter options
+  const starOptions = [
+    { value: 5, label: "5 Stars" },
+    { value: 4, label: "4 Stars" },
+    { value: 3, label: "3 Stars" },
+    { value: 2, label: "2 Stars" },
+    { value: 1, label: "1 Star" },
+  ];
+
+  const hotelTypeOptions = [
+    { value: "hotel", label: "Hotel" },
+    { value: "villa", label: "Villa" },
+    { value: "resort", label: "Resort" },
+    { value: "apartment", label: "Apartment" },
+  ];
+
+  const channelTypeOptions = [
+    { value: "inhouse", label: "Inhouse" },
+    { value: "iwtx", label: "IWTX" },
+    { value: "x3", label: "x3" },
+    { value: "ratehawk", label: "Ratehawk" },
+  ];
 
   useEffect(() => {
     if (checkIn && checkOut) {
@@ -258,65 +301,29 @@ export default function HotelSearch() {
     }
   };
 
-  const [allResults, setAllResults] = useState([]);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [view, setView] = useState("card");
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(9); // Increased to show more results
-  const [hasSearchResult, setHasSearchResult] = useState(false);
-
-  // Filter options
-  const starOptions = [
-    { value: 5, label: "5 Stars" },
-    { value: 4, label: "4 Stars" },
-    { value: 3, label: "3 Stars" },
-    { value: 2, label: "2 Stars" },
-    { value: 1, label: "1 Star" },
-  ];
-
-  const hotelTypeOptions = [
-    { value: "hotel", label: "Hotel" },
-    { value: "villa", label: "Villa" },
-    { value: "resort", label: "Resort" },
-    { value: "apartment", label: "Apartment" },
-  ];
-
-  const channelTypeOptions = [
-    { value: "inhouse", label: "Inhouse" },
-    { value: "iwtx", label: "IWTX" },
-    { value: "x3", label: "x3" },
-    { value: "ratehawk", label: "Ratehawk" },
-  ];
-
   const filtered = useMemo(() => {
     let list = [...allResults];
 
-    // Hotel name search filter
     if (hotelSearchTerm.trim()) {
       list = list.filter((hotel) =>
         hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
       );
     }
 
-    // Star rating filter
     if (starRating.length > 0) {
       list = list.filter((r) => starRating.includes(r.rating));
     }
 
-    // Hotel type filter (mock implementation - you'll need to add hotelType to your data)
     if (hotelType.length > 0) {
       list = list.filter((r) => hotelType.includes(r.hotelType || "hotel"));
     }
 
-    // Channel type filter (mock implementation - you'll need to add channelType to your data)
     if (channelType.length > 0) {
       list = list.filter((r) =>
         channelType.includes(r.channelType || "inhouse")
       );
     }
 
-    // Sorting
     if (sortBy === "priceAsc")
       list.sort((a, b) => (a.price || 0) - (b.price || 0));
     if (sortBy === "priceDesc")
@@ -425,27 +432,22 @@ export default function HotelSearch() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Nationality validation
     if (!selectedNationality) {
       newErrors.nationality = "Nationality is required";
     }
 
-    // Destination validation
     if (!selectedDestination) {
       newErrors.destination = "Destination is required";
     }
 
-    // Check-in validation
     if (!checkIn) {
       newErrors.checkIn = "Check-in date is required";
     }
 
-    // Check-out validation
     if (!checkOut) {
       newErrors.checkOut = "Check-out date is required";
     }
 
-    // Agent validation
     if (!agent) {
       newErrors.agent = "Agent is required";
     }
@@ -464,39 +466,43 @@ export default function HotelSearch() {
   ) => {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
+      let localPollCount = pollCount;
 
       const poll = async () => {
         try {
+          localPollCount++;
+          setPollCount(localPollCount);
           const res = await axiosInstance.get(url, { params });
 
-          // Log for debugging
-          console.log(`Poll received ${res.data.result?.length || 0} hotels`);
+          console.log(
+            `Poll ${localPollCount} received ${
+              res.data.result?.length || 0
+            } hotels`
+          );
 
-          // Update UI every time with latest data
           if (onUpdate) {
-            onUpdate(res.data);
+            onUpdate(res.data, localPollCount);
           }
 
-          // Stop if condition met
           if (checkComplete(res.data)) {
+            setPollStatus("COMPLETED");
             return resolve(res.data);
           }
 
-          // Stop if timeout reached
           if (Date.now() - startTime >= timeoutMs) {
+            setPollStatus("TIMEOUT");
             return reject(new Error("Polling timed out"));
           }
 
-          // Wait for next interval
           setTimeout(poll, intervalMs);
         } catch (err) {
-          // Log error but don’t clear results
           console.error("Poll failed:", err);
+          setPollStatus("ERROR");
           reject(err);
         }
       };
 
-      // Start first poll after initialDelay
+      setPollStatus("IN_PROGRESS");
       setTimeout(poll, initialDelay);
     });
   };
@@ -510,10 +516,11 @@ export default function HotelSearch() {
       return;
     }
 
-    // Initial loading state
     setIsLoading(true);
     setHasSearched(true);
-    setAllResults([]); // Reset results to show empty list initially
+    setAllResults([]);
+    setPollStatus("IDLE");
+    setPollCount(0);
 
     try {
       const nationalityId = selectedNationality.value;
@@ -550,46 +557,38 @@ export default function HotelSearch() {
       const searchId = searchKeyRes.data.searchId;
       if (!searchId) throw new Error("No searchId returned");
 
-      // After initial search is done, we can set isLoading to false
-      // but keep hasSearched true to show results
       setIsLoading(false);
-
-      let pollCount = 0; // Track poll iterations
 
       const finalData = await pollUntilComplete(
         `/hotel-search/results/${searchId}`,
         { agentId },
         (data) => data.finalStatus === "COMPLETED",
-        (data) => {
-          pollCount++; // Increment poll counter
-          console.log("Poll response:", data.result);
-
+        (data, currentPollCount) => {
           const mappedResults = Array.isArray(data.result)
-            ? data.result.map((hotel, index) => {
-                const uniqueId = hotel.hotelCode
-                  ? `${searchId}-${hotel.hotelCode}-${index}-${pollCount}`
-                  : `${searchId}-h${index + 1}-${pollCount}`;
-
-                return {
-                  id: uniqueId,
-                  name: hotel.hotelName || "Unknown Hotel",
-                  city: hotel.hotelAddress
-                    ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
-                    : "Unknown City",
-                  price: hotel.baseRate || null,
-                  badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
-                  image:
-                    hotel.hotelImage ||
-                    "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
-                  rating: hotel.starRating || 0,
-                  hotelType: "hotel",
-                  channelType: "inhouse", 
-                };
-              })
+            ? data.result.map((hotel, index) => ({
+                id: hotel.hotelCode
+                  ? `${searchId}-${hotel.hotelCode}`
+                  : `${searchId}-h${index + 1}`,
+                searchId,
+                name: hotel.hotelName || "Unknown Hotel",
+                city: hotel.hotelAddress
+                  ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
+                  : "Unknown City",
+                price: hotel.baseRate || null,
+                badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
+                image:
+                  hotel.hotelImage ||
+                  "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
+                rating: hotel.starRating || 0,
+                hotelType: "hotel",
+                channelType: "inhouse",
+              }))
             : [];
 
           setHasSearchResult(true);
-          setAllResults(mappedResults); // Update UI with current results
+          setAllResults((prev) =>
+            mergeResults(prev, mappedResults, searchId)
+          );
         },
         4000,
         20000,
@@ -600,10 +599,27 @@ export default function HotelSearch() {
     } catch (err) {
       console.error("Search failed:", err);
       setHasSearched(false);
+      setPollStatus("ERROR");
     } finally {
-      setIsLoading(false); // Ensure loading is always turned off
+      setIsLoading(false);
     }
   };
+
+  // Add fade-in animation to CSS
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
@@ -611,7 +627,6 @@ export default function HotelSearch() {
       <div className="d-flex flex-grow-1">
         <Sidebar />
         <main className="flex-grow-1 p-4">
-          {/* Modern Search Form */}
           <Card className="shadow-sm rounded-xl mb-4 search-card-modern">
             <Card.Body className="p-4">
               <div className="text-center mb-4">
@@ -625,7 +640,6 @@ export default function HotelSearch() {
 
               <Form onSubmit={handleSearchSubmit}>
                 <Row className="g-4">
-                  {/* Nationality */}
                   <Col lg={3} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -640,7 +654,6 @@ export default function HotelSearch() {
                         isSearchable
                         className="modern-select"
                       />
-
                       {errors.nationality && (
                         <div className="text-danger small mt-1">
                           {errors.nationality}
@@ -649,7 +662,6 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
 
-                  {/* Destination */}
                   <Col lg={6} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -677,7 +689,6 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
 
-                  {/* Check-in */}
                   <Col lg={3} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -709,7 +720,6 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
 
-                  {/* Check-out */}
                   <Col lg={3} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -730,7 +740,6 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
 
-                  {/* Nights */}
                   <Col lg={2} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -747,7 +756,6 @@ export default function HotelSearch() {
                     </Form.Group>
                   </Col>
 
-                  {/* Rooms & Guests */}
                   <Col lg={4} md={6}>
                     <Form.Label className="fw-semibold text-dark">
                       👥 Rooms & Guests
@@ -767,7 +775,6 @@ export default function HotelSearch() {
                     </Button>
                   </Col>
 
-                  {/* Agent */}
                   <Col lg={3} md={6}>
                     <Form.Group>
                       <Form.Label className="fw-semibold text-dark">
@@ -791,7 +798,6 @@ export default function HotelSearch() {
                   </Col>
                 </Row>
 
-                {/* Rooms Configuration */}
                 {roomsOpen && (
                   <Row className="g-3 mt-3">
                     <Col md={12}>
@@ -800,7 +806,6 @@ export default function HotelSearch() {
                   </Row>
                 )}
 
-                {/* Search Button */}
                 <Row className="mt-4">
                   <Col className="d-flex justify-content-center">
                     <Button
@@ -831,7 +836,15 @@ export default function HotelSearch() {
             </Card.Body>
           </Card>
 
-          {/* Search Results Section */}
+          {hasSearched && pollStatus === "IN_PROGRESS" && (
+            <Card className="shadow-sm rounded-xl mb-4">
+              <Card.Body className="text-center py-3">
+                <Spinner animation="border" size="sm" className="me-2" />
+                <span>Loading more results...</span>
+              </Card.Body>
+            </Card>
+          )}
+
           {!hasSearched && (
             <Card className="shadow-sm rounded-xl">
               <Card.Body className="text-center text-muted py-5">
@@ -846,12 +859,10 @@ export default function HotelSearch() {
           )}
 
           {hasSearched && (
-            <>
-              {/* Filters and Controls */}
+            <div>
               <Card className="shadow-sm rounded-xl mb-4 filtersection">
                 <Card.Body className="p-3">
                   <Row className="g-3 align-items-center">
-                    {/* View Toggle */}
                     <Col lg={2} md={6}>
                       <ButtonGroup className="w-100">
                         <ToggleButton
@@ -885,7 +896,6 @@ export default function HotelSearch() {
                       </ButtonGroup>
                     </Col>
 
-                    {/* Hotel Name Search */}
                     <Col lg={3} md={6}>
                       <Form.Group className="hotel-search-bar">
                         <Form.Label className="mb-1 small fw-semibold">
@@ -902,7 +912,6 @@ export default function HotelSearch() {
                       </Form.Group>
                     </Col>
 
-                    {/* Star Rating Filter */}
                     <Col lg={2} md={6}>
                       <Form.Group>
                         <Form.Label className="mb-1 small fw-semibold">
@@ -920,7 +929,6 @@ export default function HotelSearch() {
                       </Form.Group>
                     </Col>
 
-                    {/* Hotel Type Filter */}
                     <Col lg={2} md={6}>
                       <Form.Group>
                         <Form.Label className="mb-1 small fw-semibold">
@@ -938,7 +946,6 @@ export default function HotelSearch() {
                       </Form.Group>
                     </Col>
 
-                    {/* Channel Type Filter */}
                     <Col lg={2} md={6}>
                       <Form.Group>
                         <Form.Label className="mb-1 small fw-semibold">
@@ -956,7 +963,6 @@ export default function HotelSearch() {
                       </Form.Group>
                     </Col>
 
-                    {/* Sort Options */}
                     <Col lg={2} md={6}>
                       <Form.Group>
                         <Form.Label className="mb-1 small fw-semibold">
@@ -984,7 +990,6 @@ export default function HotelSearch() {
                 </Card.Body>
               </Card>
 
-              {/* Loading State - only shows during initial search */}
               {isLoading && (
                 <Card className="shadow-sm rounded-xl mb-4">
                   <Card.Body className="text-center py-5">
@@ -1001,96 +1006,94 @@ export default function HotelSearch() {
                 </Card>
               )}
 
-              {/* Search Results - shows when we have any results (even during polling) */}
-              {hasSearched && (
-                <>
-                  {view === "card" && (
-                    <Row xs={1} md={2} xl={3} className="g-3">
-                      {pageItems.length > 0 ? (
-                        pageItems.map((hotel) => (
-                          <Col key={hotel.id}>
-                            <Card className="shadow-sm rounded-xl h-100 hotel-card-modern">
-                              <div className="hotel-image-container">
-                                <LazyImage src={hotel.image} alt={hotel.name} />
-                                <div className="hotel-rating-badge">
-                                  <FaStar className="text-warning me-1" />
-                                  {hotel.rating}
-                                </div>
+              <div>
+                {view === "card" && (
+                  <Row xs={1} md={2} xl={3} className="g-3">
+                    {pageItems.length > 0 ? (
+                      pageItems.map((hotel) => (
+                        <Col key={hotel.id}>
+                          <Card className="shadow-sm rounded-xl h-100 hotel-card-modern animate-fadeIn">
+                            <div className="hotel-image-container">
+                              <LazyImage src={hotel.image} alt={hotel.name} />
+                              <div className="hotel-rating-badge">
+                                <FaStar className="text-warning me-1" />
+                                {hotel.rating}
                               </div>
-                              <Card.Body className="p-3">
-                                <h6 className="hotel-name mb-2 fw-bold">
-                                  {hotel.name}
-                                </h6>
-                                <p className="hotel-location mb-2 text-muted small">
-                                  📍 {hotel.city}
-                                </p>
-                                <Badge bg="success" className="mb-3 hotel-badge">
-                                  {hotel.badge}
-                                </Badge>
-                                <div className="hotel-price-section">
-                                  <div className="hotel-price">
-                                    {hotel.price
-                                      ? `Starts from AED ${hotel.price.toLocaleString()}`
-                                      : "Price Unavailable"}
-                                  </div>
-                                  <Button className="btn-view-rooms" size="sm">
-                                    View Rooms
-                                  </Button>
+                            </div>
+                            <Card.Body className="p-3">
+                              <h6 className="hotel-name mb-2 fw-bold">
+                                {hotel.name}
+                              </h6>
+                              <p className="hotel-location mb-2 text-muted small">
+                                📍 {hotel.city}
+                              </p>
+                              <Badge bg="success" className="mb-3 hotel-badge">
+                                {hotel.badge}
+                              </Badge>
+                              <div className="hotel-price-section">
+                                <div className="hotel-price">
+                                  {hotel.price
+                                    ? `Starts from AED ${hotel.price.toLocaleString()}`
+                                    : "Price Unavailable"}
                                 </div>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        ))
-                      ) : (
-                        <Col>
-                          <Card className="shadow-sm rounded-xl">
-                            <Card.Body className="text-center text-muted py-5">
-                              <FaSearch className="display-4 text-muted mb-3" />
-                              <h5>No results found</h5>
-                              <p>Try adjusting your filters or search criteria.</p>
+                                <Button className="btn-view-rooms" size="sm">
+                                  View Rooms
+                                </Button>
+                              </div>
                             </Card.Body>
                           </Card>
                         </Col>
-                      )}
-                    </Row>
-                  )}
+                      ))
+                    ) : (
+                      <Col>
+                        <Card className="shadow-sm rounded-xl">
+                          <Card.Body className="text-center text-muted py-5">
+                            <FaSearch className="display-4 text-muted mb-3" />
+                            <h5>No results found</h5>
+                            <p>
+                              Try adjusting your filters or search criteria.
+                            </p>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    )}
+                  </Row>
+                )}
 
-                  {/* Pagination */}
-                  {pageItems.length > 0 && (
-                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
-                      <small className="text-muted fw-semibold">
-                        Showing {pageIndex * pageSize + 1}-
-                        {Math.min(pageIndex * pageSize + pageSize, totalElements)} of {totalElements}{" "}
-                        results
-                      </small>
-                      <Pagination className="mb-0 pagination-modern">
-                        <Pagination.Prev
-                          disabled={pageIndex === 0}
-                          onClick={() => goToPage(pageIndex - 1)}
-                        />
-                        {pageNumbers.map((n) =>
-                          typeof n === "number" ? (
-                            <Pagination.Item
-                              key={n}
-                              active={n === pageIndex + 1}
-                              onClick={() => goToPage(n - 1)}
-                            >
-                              {n}
-                            </Pagination.Item>
-                          ) : (
-                            <Pagination.Ellipsis key={n} disabled />
-                          )
-                        )}
-                        <Pagination.Next
-                          disabled={pageIndex >= totalPages - 1}
-                          onClick={() => goToPage(pageIndex + 1)}
-                        />
-                      </Pagination>
-                    </div>
-                  )}
-                </>
-              )}
-            </>
+                {pageItems.length > 0 && (
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
+                    <small className="text-muted fw-semibold">
+                      Showing {pageIndex * pageSize + 1}-
+                      {Math.min(pageIndex * pageSize + pageSize, totalElements)}{" "}
+                      of {totalElements} results
+                    </small>
+                    <Pagination className="mb-0 pagination-modern">
+                      <Pagination.Prev
+                        disabled={pageIndex === 0}
+                        onClick={() => goToPage(pageIndex - 1)}
+                      />
+                      {pageNumbers.map((n) =>
+                        typeof n === "number" ? (
+                          <Pagination.Item
+                            key={n}
+                            active={n === pageIndex + 1}
+                            onClick={() => goToPage(n - 1)}
+                          >
+                            {n}
+                          </Pagination.Item>
+                        ) : (
+                          <Pagination.Ellipsis key={n} disabled />
+                        )
+                      )}
+                      <Pagination.Next
+                        disabled={pageIndex >= totalPages - 1}
+                        onClick={() => goToPage(pageIndex + 1)}
+                      />
+                    </Pagination>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </main>
       </div>
