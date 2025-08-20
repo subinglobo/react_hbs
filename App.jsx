@@ -114,6 +114,7 @@ export default function App() {
         <Route path="/masters/destination" element={<Destination />} />
         <Route path="/masters/market-type" element={<MarketType />} />
         <Route path="/masters/region" element={<Region />} />
+        <Route path="/masters/countries" element={<Country />} />
 
          {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 

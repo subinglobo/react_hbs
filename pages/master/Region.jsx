@@ -137,7 +137,7 @@ export default function Region() {
       }
     } catch (error) {
       setError("Sorry! Data not saved to db..");
-      toast.error("Failed to save bank data");
+      toast.error("Failed to save region data");
     } finally {
       setIsLoading(false);
     }
@@ -321,7 +321,7 @@ export default function Region() {
           <Modal show={showModal} onHide={closeModal} centered>
             <Modal.Header closeButton={!isLoading}>
               <Modal.Title>
-                {editing ? "Update Region" : "Create BankRegion"}
+                {editing ? "Update Region" : "Create Region"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
