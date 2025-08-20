@@ -10,9 +10,14 @@ export default function Sidebar() {
   const handleShow = () => setShow(true);
   const [openGroups, setOpenGroups] = useState({});
 
+
   const toggleGroup = (groupKey) => {
-    setOpenGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
-  };
+  setOpenGroups((prev) => {
+    const newOpenGroups = {};
+    newOpenGroups[groupKey] = !prev[groupKey];
+    return newOpenGroups;
+  });
+};
 
   // Get roles as an array
   const storedRoles = (localStorage.getItem("userRole") || "")
@@ -64,7 +69,7 @@ export default function Sidebar() {
             { label: "Market Type", to: "/masters/market-type" },
             { label: "Region", to: "/masters/region" },
             { label: "Countries", to: "/masters/countries" },
-            { label: "Provice", to: "/masters/states" },
+            { label: "Province", to: "/masters/states" },
             { label: "Destinations", to: "/masters/destination" },
           ],
         },
@@ -110,7 +115,7 @@ export default function Sidebar() {
             { label: "Package Category", to: "/masters/package-category" },
             { label: "Package Type", to: "/masters/package-type" },
             { label: "Day Activity", to: "/masters/day-activity" },
-            { label: "Itinerary Details", to: "/masters/itinerary details" },
+            { label: "Itinerary Details", to: "/masters/itinerary-details" },
             { label: "Visa Information", to: "/masters/visa-information" },
             {
               label: "Terms and Conditions",
@@ -226,7 +231,7 @@ export default function Sidebar() {
       to: "/assigned-agents",
       roles: ["admin"],
     },
-    { label: "Calender", to: "/calender" ,   roles: ["admin", "agent", "staff", "hotel"]},
+    { label: "Calendar", to: "/calendar", roles: ["admin", "agent", "staff", "hotel"] },
     {
       label: "Extranet Contract",
       to: "/extranet-contract",

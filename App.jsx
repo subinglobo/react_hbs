@@ -24,6 +24,7 @@ import Currency from "./pages/master/Currency";
 import HotelRegistrationActions from "./pages/HotelRegistrationActions";
 import MarketType from "./pages/master/MarketType";
 import Region from "./pages/master/Region";
+import Province from "./pages/master/Province";
 
 
 export default function App() {
@@ -115,6 +116,7 @@ export default function App() {
         <Route path="/masters/market-type" element={<MarketType />} />
         <Route path="/masters/region" element={<Region />} />
         <Route path="/masters/countries" element={<Country />} />
+        <Route path="/masters/states" element={<Province />} />
 
          {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 
