@@ -26,18 +26,6 @@ import {
 import axios from "axios";
 import "../styles/HotelSearch.css";
 
-// Helper function to merge results with deduplication
-const mergeResults = (existing, incoming, searchId) => {
-  const map = new Map(existing.map((h) => [h.id, h]));
-  incoming.forEach((hotel, index) => {
-      const uniqueId = hotel.hotelCode
-      ? `${searchId}-${hotel.hotelCode}`
-      : `${searchId}-h${index + 1}`;
-    map.set(uniqueId, { ...map.get(uniqueId), ...hotel, id: uniqueId });
-  });
-  return Array.from(map.values());
-};
-
 function RoomGuestSelector({ value, onChange }) {
   const [rooms, setRooms] = useState(value);
 
@@ -247,10 +235,12 @@ export default function HotelSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState("card");
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(9);
+  const [pageSize] = useState(10); // Set to 20 as per your example
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [hasSearchResult, setHasSearchResult] = useState(false);
   const [pollStatus, setPollStatus] = useState("IDLE");
-  const [pollCount, setPollCount] = useState(0);
+  const [searchId, setSearchId] = useState(null);
 
   // Filter options
   const starOptions = [
@@ -301,54 +291,7 @@ export default function HotelSearch() {
     }
   };
 
-  const filtered = useMemo(() => {
-    let list = [...allResults];
-
-    if (hotelSearchTerm.trim()) {
-      list = list.filter((hotel) =>
-        hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
-      );
-    }
-
-    if (starRating.length > 0) {
-      list = list.filter((r) => starRating.includes(r.rating));
-    }
-
-    if (hotelType.length > 0) {
-      list = list.filter((r) => hotelType.includes(r.hotelType || "hotel"));
-    }
-
-    if (channelType.length > 0) {
-      list = list.filter((r) =>
-        channelType.includes(r.channelType || "inhouse")
-      );
-    }
-
-    if (sortBy === "priceAsc")
-      list.sort((a, b) => (a.price || 0) - (b.price || 0));
-    if (sortBy === "priceDesc")
-      list.sort((a, b) => (b.price || 0) - (a.price || 0));
-    if (sortBy === "nameAsc") list.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy === "nameDesc")
-      list.sort((a, b) => b.name.localeCompare(a.name));
-    if (sortBy === "ratingDesc")
-      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    if (sortBy === "ratingAsc")
-      list.sort((a, b) => (a.rating || 0) - (b.rating || 0));
-
-    return list;
-  }, [allResults, starRating, hotelType, channelType, sortBy, hotelSearchTerm]);
-
-  const totalElements = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
-  const pageItems = useMemo(() => {
-    const start = pageIndex * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, pageIndex, pageSize]);
-
-  useEffect(() => {
-    setPageIndex(0);
-  }, [filtered.length]);
+  const pageItems = useMemo(() => allResults, [allResults]);
 
   const pageNumbers = useMemo(() => {
     const current = pageIndex + 1;
@@ -369,7 +312,7 @@ export default function HotelSearch() {
   }, [pageIndex, totalPages]);
 
   const goToPage = (idx) => {
-    if (idx < 0 || idx > totalPages - 1) return;
+    if (idx < 0 || idx >= totalPages) return;
     setPageIndex(idx);
   };
 
@@ -455,6 +398,53 @@ export default function HotelSearch() {
     return newErrors;
   };
 
+  const fetchHotels = async (page, searchId, agentId) => {
+    try {
+      const params = {
+        agentId: agentId || 1,
+        page: page + 1, // Backend expects 1-based indexing
+        pageSize,
+        sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
+        sortOrder: sortBy === "priceAsc" || sortBy === "ratingAsc" || sortBy === "nameAsc" ? "asc" : "desc",
+        starRating: starRating.map((s) => s.value).join(",") || undefined,
+        apiType: channelType.map((c) => c.value.toUpperCase()).join(",") || undefined,
+      };
+
+      const res = await axiosInstance.get(`/hotel-search/results/${searchId}`, { params });
+
+      const mappedResults = Array.isArray(res.data.result)
+        ? res.data.result.map((hotel, index) => ({
+            id: hotel.hotelCode
+              ? `${searchId}-${hotel.hotelCode}`
+              : `${searchId}-h${index + 1}`,
+            searchId,
+            name: hotel.hotelName || "Unknown Hotel",
+            city: hotel.hotelAddress
+              ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
+              : "Unknown City",
+            price: hotel.baseRate || null,
+            badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
+            image:
+              hotel.hotelImage ||
+              "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
+            rating: hotel.starRating || 0,
+            hotelType: "hotel",
+            channelType: "inhouse",
+          }))
+        : [];
+
+      setAllResults(mappedResults);
+      setTotalElements(res.data.totalElements || mappedResults.length);
+      setTotalPages(res.data.totalPages || 1);
+      setHasSearchResult(true);
+      return res.data;
+    } catch (err) {
+      console.error("Fetch hotels failed:", err);
+      setPollStatus("ERROR");
+      throw err;
+    }
+  };
+
   const pollUntilComplete = async (
     url,
     params,
@@ -466,12 +456,11 @@ export default function HotelSearch() {
   ) => {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
-      let localPollCount = pollCount;
+      let localPollCount = 0;
 
       const poll = async () => {
         try {
           localPollCount++;
-          setPollCount(localPollCount);
           const res = await axiosInstance.get(url, { params });
 
           console.log(
@@ -520,12 +509,14 @@ export default function HotelSearch() {
     setHasSearched(true);
     setAllResults([]);
     setPollStatus("IDLE");
-    setPollCount(0);
+    setPageIndex(0);
+    setTotalElements(0);
+    setTotalPages(1);
 
     try {
-      const nationalityId = selectedNationality.value;
-      const destinationCityId = selectedDestination.value;
-      const destinationCountryId = selectedDestination.countryId;
+      const nationalityId = "AF"; //selectedNationality.value;
+      const destinationCityId = 88; //selectedDestination.value;
+      const destinationCountryId = 23; //selectedDestination.countryId;
       const noOfRooms = String(rooms.length);
 
       const roomConfigurations = rooms.map((room, index) => ({
@@ -536,7 +527,7 @@ export default function HotelSearch() {
         adultAges: room.adultAges?.length ? room.adultAges : [25],
       }));
 
-      const agentId = agent;
+      const agentId = 1; //agent;
 
       const searchPayloadReq = {
         nationalityId,
@@ -556,14 +547,23 @@ export default function HotelSearch() {
 
       const searchId = searchKeyRes.data.searchId;
       if (!searchId) throw new Error("No searchId returned");
+      setSearchId(searchId);
 
-      setIsLoading(false);
+      const params = {
+        agentId,
+        page: 1, // Start with page 1
+        pageSize,
+        sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
+        sortOrder: sortBy === "priceAsc" || sortBy === "ratingAsc" || sortBy === "nameAsc" ? "asc" : "desc",
+        starRating: starRating.map((s) => s.value).join(",") || undefined,
+        apiType: channelType.map((c) => c.value.toUpperCase()).join(",") || undefined,
+      };
 
-      const finalData = await pollUntilComplete(
+      await pollUntilComplete(
         `/hotel-search/results/${searchId}`,
-        { agentId },
+        params,
         (data) => data.finalStatus === "COMPLETED",
-        (data, currentPollCount) => {
+        (data) => {
           const mappedResults = Array.isArray(data.result)
             ? data.result.map((hotel, index) => ({
                 id: hotel.hotelCode
@@ -585,17 +585,15 @@ export default function HotelSearch() {
               }))
             : [];
 
+          setAllResults(mappedResults);
+          setTotalElements(data.totalElements || mappedResults.length);
+          setTotalPages(data.totalPages || 1);
           setHasSearchResult(true);
-          setAllResults((prev) =>
-            mergeResults(prev, mappedResults, searchId)
-          );
         },
         4000,
         20000,
         2000
       );
-
-      console.log("Final Results:", finalData);
     } catch (err) {
       console.error("Search failed:", err);
       setHasSearched(false);
@@ -604,6 +602,14 @@ export default function HotelSearch() {
       setIsLoading(false);
     }
   };
+
+  // Fetch new page when pageIndex or filters change
+  useEffect(() => {
+    if (!searchId || !hasSearched) return;
+
+    setIsLoading(true);
+    fetchHotels(pageIndex, searchId, agent).finally(() => setIsLoading(false));
+  }, [pageIndex, sortBy, starRating, channelType, searchId, agent, hasSearched]);
 
   // Add fade-in animation to CSS
   useEffect(() => {

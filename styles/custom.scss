@@ -488,6 +488,63 @@ body{
   }
 }
 
+/* Mapping table: allow many horizontal columns with sticky first columns */
+.mapping-table {
+  thead th,
+  tbody td {
+    white-space: nowrap;
+  }
+
+  /* Ensure columns are wide enough to trigger horizontal scroll when many */
+  thead th:not(.sticky-col):not(.sticky-col-2),
+  tbody td:not(.sticky-col):not(.sticky-col-2) {
+    min-width: 140px;
+  }
+
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 2;
+  }
+  .sticky-col-2 {
+    position: sticky;
+    left: 100px; /* width of first sticky col */
+    background: #fff;
+    z-index: 2;
+  }
+}
+
+/* Platform vertical tabs for City Mapping */
+.platform-vertical-tabs {
+  min-width: 200px;
+}
+.platform-tab-link {
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+.platform-tab-link.active {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+/* Mapping page tweaks */
+.mapping-page .filters-toolbar .form-label {
+  font-size: .825rem;
+  color: #6b7280;
+}
+.mapping-page .search-compact .input-group-text {
+  background: #fff;
+  border-right: 0;
+}
+.mapping-page .search-compact input {
+  border-left: 0;
+}
+
 /* Responsive improvements for booking list */
 @media (max-width: 1200px) {
   .booking-list-container {

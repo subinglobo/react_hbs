@@ -25,6 +25,8 @@ import HotelRegistrationActions from "./pages/HotelRegistrationActions";
 import MarketType from "./pages/master/MarketType";
 import Region from "./pages/master/Region";
 import Province from "./pages/master/Province";
+import CityMapping from "./pages/master/CityMapping";
+
 
 
 export default function App() {
@@ -117,7 +119,8 @@ export default function App() {
         <Route path="/masters/countries" element={<Country />} />
         <Route path="/masters/states" element={<Province />} />
        <Route path="/masters/destination" element={<Destination />} />
-         {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
+       <Route path="/masters/city-mapping" element={<CityMapping />} />
+                {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 
       </Routes>
 
