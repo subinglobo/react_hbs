@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
 
-export default function Country() {
+export default function Destination() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -24,27 +24,39 @@ export default function Country() {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [state, setState] = useState([]);
   const [selectedState, setSelectedState] = useState("");
-  const [destinationCode, setDestinationCode] = useState([]);
+  const [destinationCode, setDestinationCode] = useState("");
 
   const nextId = useMemo(
     () => Math.max(0, ...items.map((i) => i.id)) + 1,
     [items]
   );
 
- const openCreate = () => {
+  const openCreate = () => {
     setEditing(null);
-    setCountry("");
-    setStateName("");
+    setSelectedCountry("");
+    setSelectedState("");
     setName("");
     setShowModal(true);
   };
 
   const openEdit = (item) => {
+    console.log("edit itm::", item);
     setEditing(item);
-    setCountry(item.country || "");
-    setStateName(item.state || "");
+    setSelectedCountry(item.countryId || "");
+    setSelectedState(item.stateId || "");
     setName(item.name || "");
+    setDestinationCode(item.placeCode || "");
     setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setSelectedCountry("");
+    setSelectedState("");
+    setName("");
+    setDestinationCode("");
+    setError("");
   };
 
   const handleEdit = async () => {
@@ -52,12 +64,15 @@ export default function Country() {
 
     try {
       setIsLoading(true);
-      const editRes = await axiosInstance.put(`/api/destination/${editing.id}`, {
-        countryId: `${selectedCountry}`,
-        stateId : `${selectedState}`,
-        name : `${name}`,
-        placeCode : `${destinationCode}`
-      });
+      const editRes = await axiosInstance.put(
+        `/api/destination/${editing.id}`,
+        {
+          countryId: `${selectedCountry}`,
+          stateId: `${selectedState}`,
+          name: `${name}`,
+          placeCode: `${destinationCode}`,
+        }
+      );
 
       if (editRes.data) {
         toast.success("Destination Updated Successfully!");
@@ -74,13 +89,6 @@ export default function Country() {
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditing(null);
-    setName("");
-    setError("");
-  };
-
   const fetchDestinationList = async (pageNum = 0, searchTerm = search) => {
     setIsLoading(true);
     try {
@@ -93,7 +101,9 @@ export default function Country() {
         params.append("search", searchTerm.trim());
       }
 
-      const res = await axiosInstance.get(`/api/destination?${params.toString()}`);
+      const res = await axiosInstance.get(
+        `/api/destination?${params.toString()}`
+      );
 
       // Check if response has data and pagination info
       if (res.data && Array.isArray(res.data)) {
@@ -129,9 +139,9 @@ export default function Country() {
       setIsLoading(true);
       const destinationPayload = {
         countryId: `${selectedCountry}`,
-        stateId : `${selectedState}`,
-        name : `${name}`,
-        placeCode : `${destinationCode}`
+        stateId: `${selectedState}`,
+        name: `${name}`,
+        placeCode: `${destinationCode}`,
       };
       const saveRes = await axiosInstance.post(
         "/api/destination/save",
@@ -140,7 +150,7 @@ export default function Country() {
       if (saveRes.data !== 0) {
         toast.success("Destination added Successfully!");
         // First refresh the list
-        await fetchCountryList(page, search);
+        await fetchDestinationList(page, search);
         // Then close modal
         closeModal();
       }
@@ -151,12 +161,6 @@ export default function Country() {
       setIsLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   fetchCountryList();
-  //   MarketTypeList();
-  //   RegionList();
-  // }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -206,29 +210,46 @@ export default function Country() {
             fetchDestinationList(page, search);
           })
           .catch(() => {
-            toast.error("Sorry!!Country not deleted");
+            toast.error("Sorry!!Destination not deleted");
           });
       }
     });
   };
 
-  const MarketTypeList = async () => {
+  const CountryList = async () => {
     try {
-      const response = await axiosInstance.get("/api/marketType");
-      setMarketTypes(response.data);
+      const response = await axiosInstance.get("/api/country");
+
+      if (Array.isArray(response.data)) {
+        setCountry(response.data);
+        console.log(" country list :", response.data);
+      } else {
+        setCountry([]);
+      }
     } catch (error) {
-      console.log("error for markettype list :", error);
+      console.log("error for country list :", error);
     }
   };
 
-  const RegionList = async () => {
+  const StateList = async () => {
     try {
-      const response = await axiosInstance.get("/api/region");
-      setRegionTypes(response.data);
+      const response = await axiosInstance.get("/api/province");
+
+      if (Array.isArray(response.data)) {
+        setState(response.data);
+        console.log(" state list :", response.data);
+      } else {
+        setState([]);
+      }
     } catch (error) {
-      console.log("error for region list :", error);
+      console.log("error for state list :", error);
     }
   };
+
+  useEffect(() => {
+    CountryList();
+    StateList();
+  }, []);
 
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
@@ -238,18 +259,18 @@ export default function Country() {
         <main className="flex-grow-1 p-4">
           <Card className="shadow-sm rounded-xl">
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <span className="fw-semibold">Country</span>
-              {/* Country Name Search */}
+              <span className="fw-semibold">Destination</span>
+              {/* Destination Name Search */}
               <Form.Group className="hotel-search-bar">
                 <Form.Control
                   type="text"
-                  placeholder="Search country..."
+                  placeholder="Search Destination..."
                   className="form-control-modern-sm"
                   value={searchTerm}
                   onChange={(e) => {
                     const value = e.target.value;
                     setSearchTerm(value);
-                    fetchCountryList(0, value); // pass value to API
+                    fetchDestinationList(0, value); // pass value to API
                   }}
                 />
               </Form.Group>
@@ -262,10 +283,9 @@ export default function Country() {
                 <thead>
                   <tr>
                     <th style={{ width: 100 }}>S/N</th>
-                    <th>Region</th>
-                    <th>Country</th>
-                    <th>Country Code</th>
-                    <th>Market Type</th>
+                    <th>Province</th>
+                    <th>Destination</th>
+                    <th>Destination Code</th>
                     <th style={{ width: 160 }}>Actions</th>
                   </tr>
                 </thead>
@@ -273,10 +293,9 @@ export default function Country() {
                   {items.map((item, index) => (
                     <tr key={item.id}>
                       <td>{index + 1 + page * 10}</td>
-                      <td>{item.region}</td>
+                      <td>{item.state}</td>
                       <td>{item.name}</td>
-                      <td>{item.countryCode}</td>
-                      <td>{item.marketType}</td>
+                      <td>{item.placeCode}</td>
                       <td>
                         <div className="d-flex gap-2">
                           <FaEdit
@@ -304,14 +323,14 @@ export default function Country() {
                         >
                           <span className="visually-hidden">Loading...</span>
                         </div>
-                        Loading available countries...
+                        Loading available destinations...
                       </td>
                     </tr>
                   )}
                   {items.length === 0 && !isLoading && (
                     <tr>
                       <td colSpan={3} className="text-center text-muted py-4">
-                        No countries found.
+                        No destinations found.
                       </td>
                     </tr>
                   )}
@@ -323,27 +342,27 @@ export default function Country() {
                 <div className="d-flex justify-content-between align-items-center p-3 border-top">
                   <div>
                     <small className="text-muted">
-                      Showing {items.length} of {totalPages * 10} countries
+                      Showing {items.length} of {totalPages * 10} destinations
                     </small>
                   </div>
                   <div>
                     <Pagination className="mb-0">
                       <Pagination.Prev
                         disabled={page === 0}
-                        onClick={() => fetchCountryList(page - 1, search)}
+                        onClick={() => fetchDestinationList(page - 1, search)}
                       />
                       {[...Array(totalPages).keys()].map((num) => (
                         <Pagination.Item
                           key={num}
                           active={num === page}
-                          onClick={() => fetchCountryList(num, search)}
+                          onClick={() => fetchDestinationList(num, search)}
                         >
                           {num + 1}
                         </Pagination.Item>
                       ))}
                       <Pagination.Next
                         disabled={page === totalPages - 1}
-                        onClick={() => fetchCountryList(page + 1, search)}
+                        onClick={() => fetchDestinationList(page + 1, search)}
                       />
                     </Pagination>
                   </div>
@@ -355,25 +374,26 @@ export default function Country() {
           <Modal show={showModal} onHide={closeModal} centered>
             <Modal.Header closeButton={!isLoading}>
               <Modal.Title>
-                {editing ? "Update Country" : "Create Country"}
+                {editing ? "Update Destination" : "Create Destination"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Market Type</Form.Label>
+                  <Form.Label>Country</Form.Label>
                   <Form.Select
-                    name="marketTypeId"
-                    value={selectedMarketType}
-                    onChange={(e) => setSelectedMarketType(e.target.value)}
+                    name="countryId"
+                    value={selectedCountry}
+                    onChange={(e) => setSelectedCountry(e.target.value)}
                     isInvalid={!!error}
                   >
-                    <option value="">Select MarketType</option>
-                    {marketTypes.map((market) => (
-                      <option key={market.marketTypeId} value={market.marketTypeId}>
-                        {market.name}
-                      </option>
-                    ))}
+                    <option value="">Select Country</option>
+                    {Array.isArray(country) &&
+                      country.map((con) => (
+                        <option key={con.id} value={con.id}>
+                          {con.name}
+                        </option>
+                      ))}
                   </Form.Select>
                   {error && (
                     <Form.Control.Feedback type="invalid">
@@ -382,19 +402,20 @@ export default function Country() {
                   )}
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Region</Form.Label>
+                  <Form.Label>Province</Form.Label>
                   <Form.Select
-                    name="regionId"
-                    value={selectedRegion}
-                    onChange={(e) => setSelectedRegion(e.target.value)}
+                    name="provinceId"
+                    value={selectedState}
+                    onChange={(e) => setSelectedState(e.target.value)}
                     isInvalid={!!error}
                   >
-                    <option value="">Select Region</option>
-                    {regionTypes.map((region) => (
-                      <option key={region.id} value={region.id}>
-                        {region.name}
-                      </option>
-                    ))}
+                    <option value="">Select Province</option>
+                    {Array.isArray(state) &&
+                      state.map((st) => (
+                        <option key={st.id} value={st.id}>
+                          {st.stateName}
+                        </option>
+                      ))}
                   </Form.Select>
                   {error && (
                     <Form.Control.Feedback type="invalid">
@@ -404,11 +425,11 @@ export default function Country() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Country Name</Form.Label>
+                  <Form.Label>Destination</Form.Label>
                   <Form.Control
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter country name"
+                    placeholder="Enter Destination"
                     autoFocus
                     isInvalid={!!error}
                   />
@@ -419,11 +440,11 @@ export default function Country() {
                   )}
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Country Code</Form.Label>
+                  <Form.Label>Destination Code</Form.Label>
                   <Form.Control
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    placeholder="Enter country code"
+                    value={destinationCode}
+                    onChange={(e) => setDestinationCode(e.target.value)}
+                    placeholder="Enter Destination code"
                     autoFocus
                     isInvalid={!!error}
                   />
@@ -445,7 +466,7 @@ export default function Country() {
               </Button>
               <Button
                 className="btn-indigo"
-                onClick={editing ? handleEdit : saveCountry}
+                onClick={editing ? handleEdit : saveDestination}
                 disabled={isLoading}
               >
                 {isLoading ? (

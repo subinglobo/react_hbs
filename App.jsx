@@ -112,12 +112,11 @@ export default function App() {
          <Route path="/masters/markup-type" element={<MarkupType />} />
          <Route path="/masters/currency" element={<Currency />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
-        <Route path="/masters/destination" element={<Destination />} />
         <Route path="/masters/market-type" element={<MarketType />} />
         <Route path="/masters/region" element={<Region />} />
         <Route path="/masters/countries" element={<Country />} />
         <Route path="/masters/states" element={<Province />} />
-
+       <Route path="/masters/destination" element={<Destination />} />
          {/* <Route path="/hotel-registration-actions" element={<HotelRegistrationActions />} /> */}
 
       </Routes>
