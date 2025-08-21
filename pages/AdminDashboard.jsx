@@ -33,7 +33,7 @@ export default function AdminDashboard(){
           <div className="d-flex flex-wrap gap-2">
             <Button className="btn-indigo" onClick={()=>navigate('/hotels/new')}>Add New Hotel</Button>
             <Button className="btn-green" onClick={()=>navigate('/agents/new')}>Add New Agent</Button>
-            <Button className="btn-yellow">Accommodation</Button>
+            <Button className="btn-yellow" onClick={()=>navigate('/new-booking/hotel')}>Accommodation</Button>
             <Button className="btn-blue">Transfer</Button>
             <Button className="btn-pink">Tours & Activities</Button>
             <Button className="btn-purple">Agent Account</Button>
