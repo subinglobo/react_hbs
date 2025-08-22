@@ -291,7 +291,16 @@ export default function HotelSearch() {
     }
   };
 
-  const pageItems = useMemo(() => allResults, [allResults]);
+  // const pageItems = useMemo(() => allResults, [allResults]);
+
+  const pageItems = useMemo(() => {
+  if (hotelSearchTerm) {
+    return allResults.filter((hotel) =>
+      hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
+    );
+  }
+  return allResults;
+}, [allResults, hotelSearchTerm]);
 
   const pageNumbers = useMemo(() => {
     const current = pageIndex + 1;
@@ -401,7 +410,7 @@ export default function HotelSearch() {
   const fetchHotels = async (page, searchId, agentId) => {
     try {
       const params = {
-        agentId: agentId || 1,
+        agentId: 1,   //agentId || 1,
         page: page + 1, // Backend expects 1-based indexing
         pageSize,
         sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
@@ -433,9 +442,11 @@ export default function HotelSearch() {
           }))
         : [];
 
+      // res.data.totalPages = 100;
+      console.log("res:::" , res)
       setAllResults(mappedResults);
-      setTotalElements(res.data.totalElements || mappedResults.length);
-      setTotalPages(res.data.totalPages || 1);
+      setTotalElements(res.data.size || mappedResults.length);
+      setTotalPages(res.data.totalResults || 1);
       setHasSearchResult(true);
       return res.data;
     } catch (err) {
@@ -550,7 +561,8 @@ export default function HotelSearch() {
       setSearchId(searchId);
 
       const params = {
-        agentId,
+       
+        agentId : 1,
         page: 1, // Start with page 1
         pageSize,
         sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
@@ -585,9 +597,12 @@ export default function HotelSearch() {
               }))
             : [];
 
+              console.log("handlesubmit data::" , data)
+              console.log("mappedResults::" , mappedResults)
+              console.log("mappedResults length::" , mappedResults.length)
           setAllResults(mappedResults);
-          setTotalElements(data.totalElements || mappedResults.length);
-          setTotalPages(data.totalPages || 1);
+          setTotalElements(data.size || mappedResults.length);
+          setTotalPages(data.totalResults || 1);
           setHasSearchResult(true);
         },
         4000,
@@ -864,7 +879,7 @@ export default function HotelSearch() {
             </Card>
           )}
 
-          {hasSearched && (
+          {hasSearched && hasSearchResult && (
             <div>
               <Card className="shadow-sm rounded-xl mb-4 filtersection">
                 <Card.Body className="p-3">
