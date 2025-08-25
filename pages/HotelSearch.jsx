@@ -998,12 +998,12 @@ export default function HotelSearch() {
                         >
                           <option value="priceAsc">Price: Low to High</option>
                           <option value="priceDesc">Price: High to Low</option>
-                          <option value="ratingDesc">
+                          {/* <option value="ratingDesc">
                             Rating: High to Low
                           </option>
                           <option value="ratingAsc">Rating: Low to High</option>
                           <option value="nameAsc">Name: A-Z</option>
-                          <option value="nameDesc">Name: Z-A</option>
+                          <option value="nameDesc">Name: Z-A</option> */}
                         </Form.Select>
                       </Form.Group>
                     </Col>
