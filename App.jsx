@@ -3,7 +3,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login";
 import SelectRole from "./pages/SelectRole";
 import Register from "./pages/Register";
-import State from "./pages/master/State";
+
 import Country from "./pages/master/Country";
 import Destination from "./pages/master/Destination";
 import Hotels from "./pages/master/Hotels";
@@ -38,7 +38,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/agentDashboard" element={<AgentDashboard />} />
         {/* Protected Routes */}
-        <Route
+        {/* <Route
           path="/states"
           element={
             <PrivateRoute>
@@ -49,7 +49,7 @@ export default function App() {
               </>
             </PrivateRoute>
           }
-        />
+        /> */}
         <Route
           path="/hotels"
           element={

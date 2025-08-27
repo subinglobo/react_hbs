@@ -341,15 +341,16 @@ export default function HotelSearch() {
     }
   };
 
+  //stateList
   const cityList = async (searchText = "") => {
     try {
       const response = await axiosInstance.get(
-        `/api/destination?search=${searchText}`
+        `/api/province?search=${searchText}`
       );
       const cityApiRes = Array.isArray(response.data) ? response.data : [];
       const options = cityApiRes.map((city) => ({
         value: city.id,
-        label: `${city.name}, ${city.country}`,
+        label: `${city.stateName}, ${city.country}`,
         countryId: city.countryId,
       }));
       setDestinationOptions(options);
