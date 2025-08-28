@@ -132,10 +132,10 @@ const CityMapping = () => {
     if (!countryId) return [];
     try {
       const response = await axiosInstance.get(
-        `/api/destination/getCitiesByCountryId/${countryId}`,
+        `/api/province/getByCountryId/${countryId}`,
         { params: { search: inputValue } }
       );
-      return response.data.map((c) => ({ value: c.id, label: c.name }));
+      return response.data.map((c) => ({ value: c.id,  label: `${c.stateName}, ${c.country}`}));
     } catch (error) {
       console.error("Error loading platform cities (row):", error);
       return [];
@@ -176,6 +176,8 @@ const CityMapping = () => {
   };
 
   const handleRowCityChange = (platform, option) => {
+
+    console.log("handleRowCityChange::option val::" , option)
     setRowState((prev) => ({
       ...prev,
       [platform]: { ...prev[platform], cityOption: option, status: null },
@@ -183,9 +185,15 @@ const CityMapping = () => {
   };
 
   const handleRowSearch = async (platform) => {
+
+    console.log("platform:::" , platform)
     const current = rowState[platform] || {};
     const apiCountryId = current.countryOption?.value || "";
     const apiCityId = current.cityOption?.value || "";
+
+    console.log("current:::" , current)
+    console.log("apiCountryId:::" , apiCountryId)
+    console.log("apiCityId:::" , apiCityId)
 
     if (!apiCountryId) {
       toast.error("Select Platform Country first");
@@ -211,8 +219,6 @@ const CityMapping = () => {
         "/api/cityMapping/search",
         searchReq
       );
-
-      console.log("response search data:::" , response)
 
       const data = response?.data;
       const found = Array.isArray(data) ? data.length > 0 : Boolean(data);
@@ -429,9 +435,9 @@ const CityMapping = () => {
                   >
                     <thead>
                       <tr>
-                        <th>Platform</th>
-                        <th>Platform Country</th>
-                        <th>Platform City</th>
+                        <th>Api Provider</th>
+                        <th>Country</th>
+                        <th>City</th>
                         <th>Action</th>
                         <th>Status</th>
                       </tr>
@@ -523,40 +529,6 @@ const CityMapping = () => {
                   </Table>
                 </Card.Body>
               </Card>
-              {/* <Card className="shadow-sm">
-                <Card.Body>
-                  <h5 className="mb-3">Mappings Overview</h5>
-                  <Table striped bordered hover responsive>
-                    <thead>
-                      <tr>
-                        <th>Platform</th>
-                        <th>Platform Country</th>
-                        <th>Platform City</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {platforms.map((p, idx) => {
-                        const mapped = mappings.find((m) => m.apiProvider === p);
-                        return (
-                          <tr key={idx}>
-                            <td>{p}</td>
-                            <td>{mapped?.apiCountryId || "-"}</td>
-                            <td>{mapped?.apiCityId || "-"}</td>
-                            <td>
-                              {mapped ? (
-                                <Badge bg="success">✔</Badge>
-                              ) : (
-                                <Badge bg="danger">✖</Badge>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card> */}
             </>
           )}
         </main>
