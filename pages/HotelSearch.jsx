@@ -646,6 +646,8 @@ export default function HotelSearch() {
 
     setIsLoading(true);
     setHasSearched(true);
+    // Hide filter section until results actually arrive
+    setHasSearchResult(false);
     setAllResults([]);
     setPollStatus("IDLE");
     setPageIndex(0);
@@ -1079,7 +1081,7 @@ export default function HotelSearch() {
             </Card>
           )}
 
-          {hasSearchResult && !isLoading && (
+          {hasSearchResult && !isLoading && pollStatus !== "IN_PROGRESS" && (
             <div>
               <Card className="shadow-sm rounded-xl mb-3 filtersection">
                 <Card.Body className="p-3">
