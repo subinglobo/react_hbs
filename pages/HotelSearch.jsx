@@ -241,6 +241,7 @@ export default function HotelSearch() {
   const [hasSearchResult, setHasSearchResult] = useState(false);
   const [pollStatus, setPollStatus] = useState("IDLE");
   const [searchId, setSearchId] = useState(null);
+  const [isDestinationLoading, setIsDestinationLoading] = useState(false);
 
   // Filter options
   const starOptions = [
@@ -264,6 +265,48 @@ export default function HotelSearch() {
     { value: "x3", label: "x3" },
     { value: "ratehawk", label: "Ratehawk" },
   ];
+
+  // Debounce utility function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // Debounced city search function
+  const debouncedCitySearch = useRef(
+    debounce(async (searchText = "") => {
+      if (!searchText || searchText.length < 2) {
+        setDestinationOptions([]);
+        return;
+      }
+
+      setIsDestinationLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/api/province?search=${searchText}`
+        );
+        const cityApiRes = Array.isArray(response.data) ? response.data : [];
+        const options = cityApiRes.slice(0, 50).map((city) => ({
+          value: city.id,
+          label: `${city.stateName}, ${city.country}`,
+          countryId: city.countryId,
+        }));
+        setDestinationOptions(options);
+      } catch (error) {
+        console.log("axios call error for city list:", error);
+        setDestinationOptions([]);
+      } finally {
+        setIsDestinationLoading(false);
+      }
+    }, 300)
+  ).current;
 
   useEffect(() => {
     if (checkIn && checkOut) {
@@ -293,18 +336,58 @@ export default function HotelSearch() {
 
   // const pageItems = useMemo(() => allResults, [allResults]);
 
+  const filteredResults = useMemo(() => {
+    let results = allResults;
+
+    // Filter by hotel name search
+    if (hotelSearchTerm) {
+      results = results.filter((hotel) =>
+        hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by star rating
+    if (starRating.length > 0) {
+      const selectedStars = starRating.map(s => s.value);
+      results = results.filter((hotel) =>
+        selectedStars.includes(hotel.rating)
+      );
+    }
+
+    // Filter by hotel type
+    if (hotelType.length > 0) {
+      const selectedTypes = hotelType.map(t => t.value);
+      results = results.filter((hotel) =>
+        selectedTypes.includes(hotel.hotelType)
+      );
+    }
+
+    // Filter by channel type
+    if (channelType.length > 0) {
+      const selectedChannels = channelType.map(c => c.value);
+      console.log("Filtering by channel types:", selectedChannels);
+      console.log("Available hotel channel types:", [...new Set(results.map(h => h.channelType))]);
+      results = results.filter((hotel) => {
+        const matches = selectedChannels.includes(hotel.channelType);
+        console.log(`Hotel ${hotel.name}: channelType=${hotel.channelType}, matches=${matches}`);
+        return matches;
+      });
+    }
+
+    console.log("Final filtered results count:", results.length);
+    return results;
+  }, [allResults, hotelSearchTerm, starRating, hotelType, channelType]);
+
+  // Server-side pagination: current page items are already in allResults.
+  // So page items = filteredResults without client-side slicing.
   const pageItems = useMemo(() => {
-  if (hotelSearchTerm) {
-    return allResults.filter((hotel) =>
-      hotel.name.toLowerCase().includes(hotelSearchTerm.toLowerCase())
-    );
-  }
-  return allResults;
-}, [allResults, hotelSearchTerm]);
+    console.log(`Render page ${pageIndex + 1}. Using server-side page items count=${filteredResults.length}`);
+    return filteredResults;
+  }, [filteredResults, pageIndex]);
 
   const pageNumbers = useMemo(() => {
     const current = pageIndex + 1;
-    const total = totalPages;
+    const total = Math.max(1, Math.ceil(totalElements / pageSize));
     const nums = [];
     if (total <= 7) {
       for (let i = 1; i <= total; i++) nums.push(i);
@@ -318,9 +401,10 @@ export default function HotelSearch() {
       nums.push(total);
     }
     return nums;
-  }, [pageIndex, totalPages]);
+  }, [pageIndex, totalElements, pageSize]);
 
   const goToPage = (idx) => {
+    const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
     if (idx < 0 || idx >= totalPages) return;
     setPageIndex(idx);
   };
@@ -341,12 +425,18 @@ export default function HotelSearch() {
     }
   };
 
-  //stateList
-  const cityList = async (searchText = "") => {
+  // Optimized city search function
+  const cityList = (searchText = "") => {
+    debouncedCitySearch(searchText);
+  };
+
+  // Load popular destinations on first click (non-blocking)
+  const loadPopularDestinations = async () => {
+    if (destinationOptions.length > 0) return; // Already loaded
+    
     try {
-      const response = await axiosInstance.get(
-        `/api/province?search=${searchText}`
-      );
+      setIsDestinationLoading(true);
+      const response = await axiosInstance.get('/api/province?limit=20');
       const cityApiRes = Array.isArray(response.data) ? response.data : [];
       const options = cityApiRes.map((city) => ({
         value: city.id,
@@ -355,15 +445,21 @@ export default function HotelSearch() {
       }));
       setDestinationOptions(options);
     } catch (error) {
-      console.log("axios call error for city list:", error);
-      setDestinationOptions([]);
+      console.log("Error loading popular destinations:", error);
+    } finally {
+      setIsDestinationLoading(false);
     }
   };
 
   useEffect(() => {
     countryList();
-    cityList();
+    // Don't load cities on initial render to prevent UI blocking
   }, []);
+
+  // Reset page index when filters change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [hotelSearchTerm, starRating, hotelType, channelType]);
 
   const formatDate = (date) => date.toISOString().split("T")[0];
 
@@ -423,31 +519,36 @@ export default function HotelSearch() {
       const res = await axiosInstance.get(`/hotel-search/results/${searchId}`, { params });
 
       const mappedResults = Array.isArray(res.data.result)
-        ? res.data.result.map((hotel, index) => ({
-            id: hotel.hotelCode
-              ? `${searchId}-${hotel.hotelCode}`
-              : `${searchId}-h${index + 1}`,
-            searchId,
-            name: hotel.hotelName || "Unknown Hotel",
-            city: hotel.hotelAddress
-              ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
-              : "Unknown City",
-            price: hotel.baseRate || null,
-            badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
-            image:
-              hotel.hotelImage ||
-              "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
-            rating: hotel.starRating || 0,
-            hotelType: "hotel",
-            channelType: "inhouse",
-          }))
+        ? res.data.result.map((hotel, index) => {
+            console.log("Raw hotel data:", hotel);
+            return {
+              id: hotel.hotelCode
+                ? `${searchId}-${hotel.hotelCode}`
+                : `${searchId}-h${index + 1}`,
+              searchId,
+              name: hotel.hotelName || "Unknown Hotel",
+              city: hotel.hotelAddress
+                ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
+                : "Unknown City",
+              price: hotel.baseRate || null,
+              badge: hotel.baseRate ? "Rate Available" : "Rate Unavailable",
+              image:
+                hotel.hotelImage ||
+                "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
+              rating: hotel.starRating || 0,
+              hotelType: "hotel",
+              channelType: hotel.apiType?.toLowerCase() || "inhouse",
+            };
+          })
         : [];
 
       // res.data.totalPages = 100;
       console.log("res:::" , res)
+      console.log("Mapped results with channel types:", mappedResults.map(h => ({ name: h.name, channelType: h.channelType })))
       setAllResults(mappedResults);
-      setTotalElements(res.data.size || mappedResults.length);
-      setTotalPages(res.data.totalResults || 1);
+      // Backend returns totalResults = total items across all pages
+      setTotalElements(Number(res.data.totalResults) || mappedResults.length);
+      setTotalPages(Math.max(1, Math.ceil((Number(res.data.totalResults) || mappedResults.length) / pageSize)));
       setHasSearchResult(true);
       return res.data;
     } catch (err) {
@@ -506,6 +607,32 @@ export default function HotelSearch() {
       setPollStatus("IN_PROGRESS");
       setTimeout(poll, initialDelay);
     });
+  };
+
+  // Reset form function
+  const resetForm = () => {
+    setSelectedNationality(null);
+    setSelectedDestination(null);
+    setCheckIn("");
+    setCheckOut("");
+    setNights(1);
+    setAgent("");
+    setRooms([{ adults: 2, children: 0, childAges: [] }]);
+    setRoomsOpen(false);
+    setStarRating([]);
+    setHotelType([]);
+    setChannelType([]);
+    setSortBy("priceAsc");
+    setHotelSearchTerm("");
+    setErrors({});
+    setAllResults([]);
+    setHasSearched(false);
+    setHasSearchResult(false);
+    setPageIndex(0);
+    setTotalElements(0);
+    setTotalPages(1);
+    setPollStatus("IDLE");
+    setSearchId(null);
   };
 
   const handleSearchSubmit = async (e) => {
@@ -594,7 +721,7 @@ export default function HotelSearch() {
                   "https://b2b.choosenfly.com/assets/details/profilepic/hotel/hoteldefault.jpg",
                 rating: hotel.starRating || 0,
                 hotelType: "hotel",
-                channelType: "inhouse",
+                channelType: hotel.apiType?.toLowerCase() || "inhouse",
               }))
             : [];
 
@@ -602,8 +729,8 @@ export default function HotelSearch() {
               console.log("mappedResults::" , mappedResults)
               console.log("mappedResults length::" , mappedResults.length)
           setAllResults(mappedResults);
-          setTotalElements(data.size || mappedResults.length);
-          setTotalPages(data.totalResults || 1);
+          setTotalElements(Number(data.totalResults) || mappedResults.length);
+          setTotalPages(Math.max(1, Math.ceil((Number(data.totalResults) || mappedResults.length) / pageSize)));
           setHasSearchResult(true);
         },
         4000,
@@ -674,7 +801,17 @@ export default function HotelSearch() {
                         onChange={(option) => setSelectedNationality(option)}
                         placeholder="Select nationality"
                         isSearchable
+                        isClearable
                         className="modern-select"
+                        styles={{
+                          clearIndicator: (base) => ({
+                            ...base,
+                            color: '#6c757d',
+                            '&:hover': {
+                              color: '#dc3545'
+                            }
+                          })
+                        }}
                       />
                       {errors.nationality && (
                         <div className="text-danger small mt-1">
@@ -696,11 +833,53 @@ export default function HotelSearch() {
                         onChange={(option) => setSelectedDestination(option)}
                         placeholder="Where do you want to go?"
                         isSearchable
+                        isClearable
                         className="modern-select"
+                        isLoading={isDestinationLoading}
+                        noOptionsMessage={() => 
+                          isDestinationLoading 
+                            ? "Searching destinations..." 
+                            : "Type to search destinations..."
+                        }
+                        onMenuOpen={() => {
+                          if (destinationOptions.length === 0) {
+                            loadPopularDestinations();
+                          }
+                        }}
                         onInputChange={(inputValue, { action }) => {
                           if (action === "input-change") {
                             cityList(inputValue);
                           }
+                        }}
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            minHeight: '42px',
+                            border: '1px solid #dee2e6',
+                            '&:hover': {
+                              borderColor: '#86b7fe'
+                            }
+                          }),
+                          menu: (base) => ({
+                            ...base,
+                            zIndex: 9999,
+                            maxHeight: '200px'
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isFocused ? '#f8f9fa' : 'white',
+                            color: state.isSelected ? 'white' : '#212529',
+                            '&:active': {
+                              backgroundColor: '#0d6efd'
+                            }
+                          }),
+                          clearIndicator: (base) => ({
+                            ...base,
+                            color: '#6c757d',
+                            '&:hover': {
+                              color: '#dc3545'
+                            }
+                          })
                         }}
                       />
                       {errors.destination && (
@@ -811,6 +990,17 @@ export default function HotelSearch() {
                         <option value="101">Agent 101</option>
                         <option value="102">Agent 102</option>
                       </Form.Select>
+                      {/* {agent && (
+                        <Button
+                          type="button"
+                          variant="outline-danger"
+                          size="sm"
+                          className="mt-1"
+                          onClick={() => setAgent("")}
+                        >
+                          Clear
+                        </Button>
+                      )} */}
                       {errors.agent && (
                         <div className="text-danger small mt-1">
                           {errors.agent}
@@ -829,7 +1019,7 @@ export default function HotelSearch() {
                 )}
 
                 <Row className="mt-4">
-                  <Col className="d-flex justify-content-center">
+                  <Col className="d-flex justify-content-center gap-3">
                     <Button
                       type="submit"
                       className="btn-search-modern"
@@ -852,6 +1042,15 @@ export default function HotelSearch() {
                         </>
                       )}
                     </Button>
+                    {/* <Button
+                      type="button"
+                      variant="outline-secondary"
+                      size="lg"
+                      onClick={resetForm}
+                      disabled={isLoading}
+                    >
+                      Reset Form
+                    </Button> */}
                   </Col>
                 </Row>
               </Form>
@@ -880,23 +1079,24 @@ export default function HotelSearch() {
             </Card>
           )}
 
-          {hasSearched && hasSearchResult && (
+          {hasSearchResult && !isLoading && (
             <div>
-              <Card className="shadow-sm rounded-xl mb-4 filtersection">
+              <Card className="shadow-sm rounded-xl mb-3 filtersection">
                 <Card.Body className="p-3">
-                  <Row className="g-3 align-items-center">
-                    <Col lg={2} md={6}>
-                      <ButtonGroup className="w-100">
+                  <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
+                    <h6 className="mb-2 mb-md-0 fw-bold text-primary">
+                      <FaSearch className="me-2" />
+                      Filters & Sort
+                    </h6>
+                    <div className="d-flex flex-wrap gap-2">
+                      <ButtonGroup size="sm">
                         <ToggleButton
                           id="view-card"
                           type="radio"
-                          variant={
-                            view === "card" ? "primary" : "outline-secondary"
-                          }
+                          variant={view === "card" ? "primary" : "outline-secondary"}
                           checked={view === "card"}
                           value="card"
                           onChange={() => setView("card")}
-                          size="sm"
                         >
                           <FaBuilding className="me-1" />
                           Cards
@@ -904,29 +1104,28 @@ export default function HotelSearch() {
                         <ToggleButton
                           id="view-map"
                           type="radio"
-                          variant={
-                            view === "map" ? "primary" : "outline-secondary"
-                          }
+                          variant={view === "map" ? "primary" : "outline-secondary"}
                           checked={view === "map"}
                           value="map"
                           onChange={() => setView("map")}
                           disabled
-                          size="sm"
                         >
                           🗺️ Map
                         </ToggleButton>
                       </ButtonGroup>
-                    </Col>
-
-                    <Col lg={3} md={6}>
-                      <Form.Group className="hotel-search-bar">
-                        <Form.Label className="mb-1 small fw-semibold">
+                    </div>
+                  </div>
+                  
+                  <Row className="g-3">
+                    <Col lg={3} md={4} sm={6}>
+                      <Form.Group>
+                        <Form.Label className="mb-1 small fw-semibold text-dark">
                           <FaSearch className="me-1 text-info" />
                           Hotel Name
                         </Form.Label>
                         <Form.Control
                           type="text"
-                          placeholder="Search hotels by name..."
+                          placeholder="Search hotels..."
                           className="form-control-modern-sm"
                           value={hotelSearchTerm}
                           onChange={(e) => setHotelSearchTerm(e.target.value)}
@@ -934,9 +1133,9 @@ export default function HotelSearch() {
                       </Form.Group>
                     </Col>
 
-                    <Col lg={2} md={6}>
+                    <Col lg={3} md={4} sm={6}>
                       <Form.Group>
-                        <Form.Label className="mb-1 small fw-semibold">
+                        <Form.Label className="mb-1 small fw-semibold text-dark">
                           <FaStar className="me-1 text-warning" />
                           Star Rating
                         </Form.Label>
@@ -947,13 +1146,36 @@ export default function HotelSearch() {
                           onChange={setStarRating}
                           placeholder="All Stars"
                           className="modern-select-sm"
+                          menuPosition="absolute"
+                          menuPlacement="auto"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: '36px',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px',
+                              fontSize: '0.875rem',
+                              '&:hover': {
+                                borderColor: '#86b7fe'
+                              }
+                            }),
+                            menu: (base) => ({
+                              ...base,
+                              zIndex: 99999,
+                              position: 'absolute',
+                              marginTop: '2px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px'
+                            })
+                          }}
                         />
                       </Form.Group>
                     </Col>
 
-                    <Col lg={2} md={6}>
+                    <Col lg={3} md={4} sm={6}>
                       <Form.Group>
-                        <Form.Label className="mb-1 small fw-semibold">
+                        <Form.Label className="mb-1 small fw-semibold text-dark">
                           <FaBuilding className="me-1 text-info" />
                           Hotel Type
                         </Form.Label>
@@ -964,13 +1186,36 @@ export default function HotelSearch() {
                           onChange={setHotelType}
                           placeholder="All Types"
                           className="modern-select-sm"
+                          menuPosition="absolute"
+                          menuPlacement="auto"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: '36px',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px',
+                              fontSize: '0.875rem',
+                              '&:hover': {
+                                borderColor: '#86b7fe'
+                              }
+                            }),
+                            menu: (base) => ({
+                              ...base,
+                              zIndex: 99999,
+                              position: 'absolute',
+                              marginTop: '2px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px'
+                            })
+                          }}
                         />
                       </Form.Group>
                     </Col>
 
-                    <Col lg={2} md={6}>
+                    <Col lg={3} md={4} sm={6}>
                       <Form.Group>
-                        <Form.Label className="mb-1 small fw-semibold">
+                        <Form.Label className="mb-1 small fw-semibold text-dark">
                           <FaGlobe className="me-1 text-success" />
                           Channel
                         </Form.Label>
@@ -981,13 +1226,36 @@ export default function HotelSearch() {
                           onChange={setChannelType}
                           placeholder="All Channels"
                           className="modern-select-sm"
+                          menuPosition="absolute"
+                          menuPlacement="auto"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: '36px',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px',
+                              fontSize: '0.875rem',
+                              '&:hover': {
+                                borderColor: '#86b7fe'
+                              }
+                            }),
+                            menu: (base) => ({
+                              ...base,
+                              zIndex: 99999,
+                              position: 'absolute',
+                              marginTop: '2px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '6px'
+                            })
+                          }}
                         />
                       </Form.Group>
                     </Col>
 
-                    <Col lg={2} md={6}>
+                    <Col lg={2} md={4} sm={6}>
                       <Form.Group>
-                        <Form.Label className="mb-1 small fw-semibold">
+                        <Form.Label className="mb-1 small fw-semibold text-dark">
                           <FaSort className="me-1 text-secondary" />
                           Sort By
                         </Form.Label>
@@ -999,14 +1267,25 @@ export default function HotelSearch() {
                         >
                           <option value="priceAsc">Price: Low to High</option>
                           <option value="priceDesc">Price: High to Low</option>
-                          {/* <option value="ratingDesc">
-                            Rating: High to Low
-                          </option>
-                          <option value="ratingAsc">Rating: Low to High</option>
-                          <option value="nameAsc">Name: A-Z</option>
-                          <option value="nameDesc">Name: Z-A</option> */}
                         </Form.Select>
                       </Form.Group>
+                    </Col>
+
+                    <Col lg={2} md={4} sm={6} className="d-flex align-items-end">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => {
+                          setStarRating([]);
+                          setHotelType([]);
+                          setChannelType([]);
+                          setSortBy("priceAsc");
+                          setHotelSearchTerm("");
+                        }}
+                      >
+                        Clear
+                      </Button>
                     </Col>
                   </Row>
                 </Card.Body>
@@ -1073,8 +1352,25 @@ export default function HotelSearch() {
                             <FaSearch className="display-4 text-muted mb-3" />
                             <h5>No results found</h5>
                             <p>
-                              Try adjusting your filters or search criteria.
+                              {hotelSearchTerm || starRating.length > 0 || hotelType.length > 0 || channelType.length > 0
+                                ? "No hotels match your current filters. Try adjusting your search criteria or clearing some filters."
+                                : "Try adjusting your filters or search criteria."}
                             </p>
+                            {(hotelSearchTerm || starRating.length > 0 || hotelType.length > 0 || channelType.length > 0) && (
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => {
+                                  setStarRating([]);
+                                  setHotelType([]);
+                                  setChannelType([]);
+                                  setSortBy("priceAsc");
+                                  setHotelSearchTerm("");
+                                }}
+                              >
+                                Clear All Filters
+                              </Button>
+                            )}
                           </Card.Body>
                         </Card>
                       </Col>
@@ -1082,12 +1378,12 @@ export default function HotelSearch() {
                   </Row>
                 )}
 
-                {pageItems.length > 0 && (
+                {filteredResults.length > 0 && (
                   <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
                     <small className="text-muted fw-semibold">
                       Showing {pageIndex * pageSize + 1}-
-                      {Math.min(pageIndex * pageSize + pageSize, totalElements)}{" "}
-                      of {totalElements} results
+                      {Math.min(pageIndex * pageSize + pageSize, filteredResults.length)}{" "}
+                      of {filteredResults.length} results
                     </small>
                     <Pagination className="mb-0 pagination-modern">
                       <Pagination.Prev
@@ -1108,7 +1404,7 @@ export default function HotelSearch() {
                         )
                       )}
                       <Pagination.Next
-                        disabled={pageIndex >= totalPages - 1}
+                        disabled={pageIndex >= Math.ceil(filteredResults.length / pageSize) - 1}
                         onClick={() => goToPage(pageIndex + 1)}
                       />
                     </Pagination>

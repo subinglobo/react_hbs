@@ -86,6 +86,199 @@
   transition: all 0.3s ease;
 }
 
+/* Filter Section Styling - Compact Version */
+.filtersection {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  position: relative;
+  z-index: 100;
+}
+
+.filtersection .card-body {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.filtersection h6 {
+  color: #495057;
+  font-size: 1rem;
+}
+
+.filtersection .form-label {
+  font-size: 0.8rem;
+  color: #495057;
+  margin-bottom: 0.25rem;
+}
+
+.filtersection .form-control,
+.filtersection .form-select {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.filtersection .form-control:focus,
+.filtersection .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(134, 183, 254, 0.25);
+}
+
+.filtersection .btn-outline-primary {
+  border: 1px solid #86b7fe;
+  color: #86b7fe;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  padding: 0.375rem 0.75rem;
+}
+
+.filtersection .btn-outline-primary:hover {
+  background-color: #86b7fe;
+  border-color: #86b7fe;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(134, 183, 254, 0.3);
+}
+
+/* Responsive improvements for filter section */
+@media (max-width: 768px) {
+  .filtersection .card-body {
+    padding: 0.75rem !important;
+  }
+  
+  .filtersection h6 {
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  
+  .filtersection .form-label {
+    font-size: 0.75rem;
+  }
+  
+  .filtersection .form-control,
+  .filtersection .form-select {
+    font-size: 0.8rem;
+  }
+}
+
+/* Enhanced Select styling for filter section */
+.filtersection .modern-select .css-13cymwt-control,
+.filtersection .modern-select .css-t3ipsp-control {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  min-height: 36px;
+  transition: all 0.3s ease;
+}
+
+.filtersection .modern-select .css-13cymwt-control:hover,
+.filtersection .modern-select .css-t3ipsp-control:hover {
+  border-color: #86b7fe;
+}
+
+.filtersection .modern-select .css-t3ipsp-control {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(134, 183, 254, 0.25);
+}
+
+/* Fix dropdown overflow and z-index issues */
+.filtersection .modern-select .css-1nmdiq5-menu {
+  z-index: 9999 !important;
+  position: absolute !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 2px !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+.filtersection .modern-select .css-1n6sfyn-MenuList {
+  max-height: 180px !important;
+  overflow-y: auto !important;
+  padding: 4px 0 !important;
+}
+
+.filtersection .modern-select .css-tr4s9e-option {
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.filtersection .modern-select .css-tr4s9e-option:hover {
+  background-color: #f8f9fa !important;
+}
+
+.filtersection .modern-select .css-tr4s9e-option--is-focused {
+  background-color: #e3f2fd !important;
+}
+
+.filtersection .modern-select .css-tr4s9e-option--is-selected {
+  background-color: #86b7fe !important;
+  color: white !important;
+}
+
+/* AsyncSelect Performance Optimizations */
+.modern-select .css-1fdsijx-ValueContainer,
+.modern-select .css-1dimb5e-singleValue {
+  will-change: auto;
+}
+
+/* Ensure hotel results don't get overlapped */
+.hotel-card-modern {
+  position: relative;
+  z-index: 1;
+}
+
+/* Additional dropdown positioning fixes */
+.modern-select {
+  position: relative;
+}
+
+.modern-select .css-1nmdiq5-menu {
+  position: absolute !important;
+  z-index: 99999 !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+.modern-select .css-1nmdiq5-menu {
+  will-change: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.modern-select .css-1n6sfyn-MenuList {
+  max-height: 200px !important;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.modern-select .css-1n6sfyn-MenuList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modern-select .css-1n6sfyn-MenuList::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 3px;
+}
+
+.modern-select .css-1n6sfyn-MenuList::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.modern-select .css-1n6sfyn-MenuList::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
 .modern-select .css-13cymwt-control:hover,
 .modern-select .css-t3ipsp-control:hover {
   border-color: #cbd5e0;
