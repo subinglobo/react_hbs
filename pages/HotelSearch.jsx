@@ -24,6 +24,7 @@ import {
   FaGlobe,
 } from "react-icons/fa";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "../styles/HotelSearch.css";
 
 function RoomGuestSelector({ value, onChange }) {
@@ -209,6 +210,7 @@ function LazyImage({ src, alt, className }) {
 }
 
 export default function HotelSearch() {
+  const navigate = useNavigate();
   const [nationalityList, setNationalityList] = useState([]);
   const [selectedNationality, setSelectedNationality] = useState(null);
   const [destinationOptions, setDestinationOptions] = useState([]);
@@ -1339,7 +1341,21 @@ export default function HotelSearch() {
                                     ? `Starts from AED ${hotel.price.toLocaleString()}`
                                     : "Price Unavailable"}
                                 </div>
-                                <Button className="btn-view-rooms" size="sm">
+                                <Button 
+                                  className="btn-view-rooms" 
+                                  size="sm"
+                                  onClick={() => {
+                                    // In a real application, you would make an API call here to get room data
+                                    // For now, we'll navigate to the room list page
+                                    navigate('/room-list', { 
+                                      state: { 
+                                        hotelId: hotel.id,
+                                        hotelName: hotel.name,
+                                        // Add other hotel details as needed
+                                      }
+                                    });
+                                  }}
+                                >
                                   View Rooms
                                 </Button>
                               </div>

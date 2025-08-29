@@ -28,7 +28,6 @@ const CityMapping = () => {
 
   const [platforms] = useState([
     "Iwtx",
-    "Atharva",
     "Darina",
     "Jumeirah",
     "X3",
@@ -299,11 +298,10 @@ const CityMapping = () => {
   // Example rules for each platform
   const platformVisibility = {
     Iwtx: { showCountry: false, showCity: false },
-    Atharva: { showCountry: true, showCity: true },
-    Darina: { showCountry: true, showCity: false },
+    Darina: { showCountry: true, showCity: true },
     Jumeirah: { showCountry: true, showCity: true },
-    Jumeirah: { showCountry: true, showCity: true },
-    Jumeirah: { showCountry: true, showCity: true },
+    X3: { showCountry: true, showCity: true },
+    Ratehawk: { showCountry: true, showCity: true },
     // add more platforms as needed
   };
 

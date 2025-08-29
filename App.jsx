@@ -16,6 +16,7 @@ import LandingPage from "./pages/LandingPage";
 import { Toaster } from "react-hot-toast";
 import Designations from "./pages/master/Designation";
 import HotelSearch from "./pages/HotelSearch";
+import RoomList from "./pages/RoomList";
 import HotelBookingList from "./pages/list/HotelBookingList";
 import Bank from "./pages/master/Bank";
 import ContactType from "./pages/master/ContactType";
@@ -114,6 +115,7 @@ export default function App() {
          <Route path="/masters/markup-type" element={<MarkupType />} />
          <Route path="/masters/currency" element={<Currency />} />
         <Route path="/new-booking/hotel" element={<HotelSearch />} />
+        <Route path="/room-list" element={<RoomList />} />
         <Route path="/masters/market-type" element={<MarketType />} />
         <Route path="/masters/region" element={<Region />} />
         <Route path="/masters/countries" element={<Country />} />
