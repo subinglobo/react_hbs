@@ -31,6 +31,8 @@ import {
 } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/RoomList.css";
+import axiosInstance from "../components/AxiosInstance";
+import axios from "axios";
 
 const RoomList = () => {
   const [roomData, setRoomData] = useState(null);
@@ -41,148 +43,94 @@ const RoomList = () => {
   const [activeAccordion, setActiveAccordion] = useState("0");
   const location = useLocation();
   const navigate = useNavigate();
+  const [hotelStaticData, setHotelStaticData] = useState(null);
 
-  // Mock data - replace with actual API call
+  // Trigger API call on page load with state passed from HotelSearch
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = {
-        "hotels": [
-          {
-            "hotelId": "119-1249",
-            "hotelName": "Al Maha, a Luxury Collection Desert Resort & Spa, Dubai",
-            "starRating": 5,
-            "propertyType": "Hotel",
-            "chain": "MARRIOTT",
-            "city": "MURQQUAB",
-            "timeZone": null,
-            "hotelAddress": "Dubai Desert Conservation Reserve, Murqquab",
-            "hotelPhoneNumber": "+97148329900",
-            "geoLocation": null,
-            "roomCategories": [
-              {
-                "roomCategory": "Emirates Villa",
-                "roomTypeCode": "114743",
-                "baseRoomType": "Emirates Villa, 2 Bedroom Villa, Bedroom 1: 1 King, Bedroom 2: 2 Twin, Private pool",
-                "availableRates": [
-                  {
-                    "roomCategory": "Emirates Villa",
-                    "roomTypeDescription": "Emirates Villa, 2 Bedroom Villa, Bedroom 1: 1 King, Bedroom 2: 2 Twin, Private pool",
-                    "mealPlan": "Room Only",
-                    "mealPlanCode": "28",
-                    "currency": "AED",
-                    "rate": 9823.97,
-                    "totalRate": 9823.97,
-                    "rateBeforeTax": 8002.8,
-                    "recommendedRetailPrice": 12836.63,
-                    "roomStatus": "OK",
-                    "nonRefundable": false,
-                    "refundStatus": "FLEXIBLE",
-                    "contractLabel": "Tour Operator Dynamic Rate, Tour Operator Dynamic, breakfast, lunch, dinner, Book or change or cancel only by Tour Operators",
-                    "cancellationPolicies": [
-                      {
-                        "fromDate": "2025-09-11",
-                        "toDate": "2025-09-25",
-                        "percentOrAmount": "",
-                        "value": 0,
-                        "policyText": "Free cancellation until Sept 11, 2025"
-                      },
-                      {
-                        "fromDate": "2025-09-25",
-                        "toDate": "2025-09-26",
-                        "percentOrAmount": "",
-                        "value": 0,
-                        "policyText": "Free cancellation until Sept 25, 2025"
-                      }
-                    ]
-                  },
-                  {
-                    "roomCategory": "Emirates Villa",
-                    "roomTypeDescription": "Emirates Villa, 2 Bedroom Villa, Bedroom 1: 1 King, Bedroom 2: 2 Twin, Private pool",
-                    "mealPlan": "Full Board",
-                    "mealPlanCode": "14",
-                    "currency": "AED",
-                    "rate": 9823.97,
-                    "totalRate": 9823.97,
-                    "rateBeforeTax": 8002.8,
-                    "recommendedRetailPrice": 12034.33,
-                    "roomStatus": "OK",
-                    "nonRefundable": false,
-                    "refundStatus": "FLEXIBLE",
-                    "contractLabel": "Breakfast, Lunch and Evening Meal for 2 Adults",
-                    "cancellationPolicies": [
-                      {
-                        "fromDate": "2025-09-11",
-                        "toDate": "2025-09-25",
-                        "percentOrAmount": "",
-                        "value": 0,
-                        "policyText": "Free cancellation until Sept 11, 2025"
-                      },
-                      {
-                        "fromDate": "2025-09-25",
-                        "toDate": "2025-09-26",
-                        "percentOrAmount": "",
-                        "value": 0,
-                        "policyText": "Free cancellation until Sept 25, 2025"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "roomCategory": "Bedouin Villa",
-                "roomTypeCode": "123047",
-                "baseRoomType": "Bedouin Villa Twin, 1 Bedroom Villa, 2 Twin, Private pool",
-                "availableRates": [
-                  {
-                    "roomCategory": "Bedouin Villa",
-                    "roomTypeDescription": "Bedouin Villa Twin, 1 Bedroom Villa, 2 Twin, Private pool",
-                    "mealPlan": "Room Only",
-                    "mealPlanCode": "28",
-                    "currency": "AED",
-                    "rate": 3124.64,
-                    "totalRate": 3124.64,
-                    "rateBeforeTax": 2533.95,
-                    "recommendedRetailPrice": 4082.84,
-                    "roomStatus": "OK",
-                    "nonRefundable": false,
-                    "refundStatus": "FLEXIBLE",
-                    "contractLabel": "Tour Operator Dynamic Rate, Tour Operator Dynamic, breakfast, lunch, dinner, Book or change or cancel only by Tour Operators",
-                    "cancellationPolicies": [
-                      {
-                        "fromDate": "2025-09-11",
-                        "toDate": "2025-09-25",
-                        "percentOrAmount": "",
-                        "value": 0,
-                        "policyText": "Free cancellation until Sept 11, 2025"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "checkInDate": "2025-09-25",
-            "checkOutDate": "2025-09-26",
-            "nationality": "AF",
-            "numberOfRooms": 1,
-            "numberOfGuests": 2,
-            "guestBreakdown": "(2 Adults)",
-            "destination": "MURQQUAB"
-          }
-        ],
-        "message": "Search completed successfully",
-        "success": true
-      };
-      
-      setRoomData(mockData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        let payload = location.state?.payload;
+        let meta = location.state?.meta;
+
+        if (!payload) {
+          try {
+            const stored = sessionStorage.getItem("roomListPayload");
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              payload = parsed.payload;
+              meta = parsed.meta;
+              setHotelStaticData(meta);
+            }
+          } catch {}
+        }
+
+        if (!payload) {
+          setError("Missing search context. Please go back and try again.");
+          setLoading(false);
+          return;
+        }
+
+        const res = await axiosInstance.post(
+          "/api/hotel-rooms/search",
+          payload
+        );
+
+        if (!res.data || res.data.success === false) {
+          const message =
+            res.data?.message || "Search failed. Please try again.";
+          setError(message);
+          setLoading(false);
+          return;
+        }
+
+        const enriched = {
+          ...res.data,
+          hotels: (res.data.hotels || []).map((h) => ({
+            ...h,
+            // Sort availableRates within each category by totalRate asc
+            roomCategories: (h.roomCategories || []).map((c) => ({
+              ...c,
+              availableRates: (c.availableRates || [])
+                .slice()
+                .sort((a, b) => (a.totalRate || 0) - (b.totalRate || 0)),
+            })),
+          })),
+          meta: meta || {},
+          payload,
+        };
+
+        setRoomData(enriched);
+      } catch (err) {
+        console.error("Room search failed:", err);
+        setError("Search failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, [location.state]);
 
   const handleBooking = (rate) => {
     setSelectedRate(rate);
     setShowBookingModal(true);
   };
+
+  const sampleGallery = [
+    "/images/01.png",
+    "/images/02.png",
+    "/images/03.png",
+    "/images/04.jpg",
+    "/images/04.png",
+    "/images/05.jpg",
+    "/images/06.png",
+    "/images/07.png",
+    "/images/main-slider.jpg",
+    "/images/small-img.jpg",
+  ];
 
   const getMealPlanIcon = (mealPlan) => {
     switch (mealPlan.toLowerCase()) {
@@ -209,9 +157,9 @@ const RoomList = () => {
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-AE', {
-      style: 'currency',
-      currency: 'AED'
+    return new Intl.NumberFormat("en-AE", {
+      style: "currency",
+      currency: "AED",
     }).format(price);
   };
 
@@ -223,20 +171,53 @@ const RoomList = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <div className="d-flex" style={{ minHeight: "100vh" }}>
+        <Sidebar />
+        <div className="flex-grow-1 d-flex flex-column">
+          <TopBar />
+          <main className="flex-grow-1 d-flex justify-content-center align-items-center">
+            <div className="text-center results-loader">
+              <div className="loader-ring">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <h4 className="text-primary fw-bold mt-3 mb-1">
+                Fetching Best Room Options...
+              </h4>
+              <p className="text-muted small mb-0">
+                Comparing rates across providers
+              </p>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="danger">
-        <Alert.Heading>Error</Alert.Heading>
-        <p>{error}</p>
-      </Alert>
+      <div className="d-flex" style={{ minHeight: "100vh" }}>
+        <Sidebar />
+        <div className="flex-grow-1 d-flex flex-column">
+          <TopBar />
+          <main className="flex-grow-1 d-flex justify-content-center align-items-center p-3">
+            <div className="w-100" style={{ maxWidth: 480 }}>
+              <Alert variant="danger" className="mb-3">
+                <Alert.Heading>Error</Alert.Heading>
+                <p className="mb-0">{error}</p>
+              </Alert>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/new-booking/hotel")}
+              >
+                Back to Search
+              </Button>
+            </div>
+          </main>
+        </div>
+      </div>
     );
   }
 
@@ -250,6 +231,7 @@ const RoomList = () => {
   }
 
   const hotel = roomData.hotels[0];
+  const payload = roomData.payload || {};
 
   return (
     <div className="room-list-container">
@@ -285,6 +267,25 @@ const RoomList = () => {
                             <FaPhone className="text-muted me-2" />
                             {hotel.hotelPhoneNumber}
                           </p>
+                          <div className="mt-2">
+                            <small className="text-muted">
+                              <strong>Please note:</strong> Some properties may
+                              collect additional charges such as city tax,
+                              resort fees, or security deposits during check-in.
+                              Policies such as check-in time, child
+                              accommodation, and cancellation rules can vary by
+                              room and provider.
+                            </small>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => navigate(-1)}
+                          >
+                            Back to Search
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -295,20 +296,40 @@ const RoomList = () => {
                         <h6 className="mb-3">Booking Summary</h6>
                         <div className="booking-details">
                           <div className="d-flex justify-content-between mb-2">
-                            <span><FaCalendarAlt className="text-muted me-2" />Check-in:</span>
-                            <span className="fw-semibold">{hotel.checkInDate}</span>
+                            <span>
+                              <FaCalendarAlt className="text-muted me-2" />
+                              Check-in:
+                            </span>
+                            <span className="fw-semibold">
+                              {payload.checkInDate || hotel.checkInDate}
+                            </span>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
-                            <span><FaCalendarAlt className="text-muted me-2" />Check-out:</span>
-                            <span className="fw-semibold">{hotel.checkOutDate}</span>
+                            <span>
+                              <FaCalendarAlt className="text-muted me-2" />
+                              Check-out:
+                            </span>
+                            <span className="fw-semibold">
+                              {payload.checkOutDate || hotel.checkOutDate}
+                            </span>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
-                            <span><FaUsers className="text-muted me-2" />Guests:</span>
-                            <span className="fw-semibold">{hotel.guestBreakdown}</span>
+                            <span>
+                              <FaUsers className="text-muted me-2" />
+                              Guests:
+                            </span>
+                            <span className="fw-semibold">
+                              {hotel.guestBreakdown}
+                            </span>
                           </div>
                           <div className="d-flex justify-content-between">
-                            <span><FaBed className="text-muted me-2" />Rooms:</span>
-                            <span className="fw-semibold">{hotel.numberOfRooms}</span>
+                            <span>
+                              <FaBed className="text-muted me-2" />
+                              Rooms:
+                            </span>
+                            <span className="fw-semibold">
+                              {hotel.numberOfRooms}
+                            </span>
                           </div>
                         </div>
                       </Card.Body>
@@ -321,21 +342,41 @@ const RoomList = () => {
             {/* Room Categories Accordion */}
             <div className="room-categories-section">
               <h4 className="mb-4">Available Room Categories</h4>
-              <Accordion activeKey={activeAccordion} onSelect={(key) => setActiveAccordion(key)}>
+              <Accordion
+                activeKey={activeAccordion}
+                onSelect={(key) => setActiveAccordion(key)}
+              >
                 {hotel.roomCategories.map((category, index) => (
-                  <Accordion.Item key={index} eventKey={index.toString()} className="room-category-item">
+                  <Accordion.Item
+                    key={index}
+                    eventKey={index.toString()}
+                    className="room-category-item"
+                  >
                     <Accordion.Header className="room-category-header">
                       <div className="d-flex justify-content-between align-items-center w-100 me-3">
                         <div className="room-category-info">
                           <h5 className="mb-1">{category.roomCategory}</h5>
-                          <p className="mb-0 text-muted small">{category.baseRoomType}</p>
+                          <p className="mb-0 text-muted small">
+                            {category.baseRoomType}
+                          </p>
                         </div>
                         <div className="room-category-price">
                           <span className="price-range">
-                            From {formatPrice(Math.min(...category.availableRates.map(rate => rate.rate)))}
+                            From{" "}
+                            {formatPrice(
+                              Math.min(
+                                ...category.availableRates.map(
+                                  (rate) => rate.rate
+                                )
+                              )
+                            )}
                           </span>
                           <span className="rates-count">
-                            {category.availableRates.length} rate{category.availableRates.length !== 1 ? 's' : ''} available
+                            {category.availableRates.length} rate
+                            {category.availableRates.length !== 1
+                              ? "s"
+                              : ""}{" "}
+                            available
                           </span>
                         </div>
                       </div>
@@ -344,21 +385,28 @@ const RoomList = () => {
                       <Row>
                         {category.availableRates.map((rate, rateIndex) => (
                           <Col key={rateIndex} lg={6} xl={4} className="mb-3">
-                            <Card className="rate-card h-100">
+                            <Card
+                              className="rate-card h-100"
+                              role="button"
+                              onClick={() => handleBooking(rate)}
+                            >
                               <Card.Body className="p-3">
                                 <div className="rate-header mb-3">
                                   <div className="d-flex align-items-center gap-2 mb-2">
                                     {getMealPlanIcon(rate.mealPlan)}
-                                    <span className="fw-semibold">{rate.mealPlan}</span>
+                                    <span className="fw-semibold">
+                                      {rate.mealPlan}
+                                    </span>
                                   </div>
                                   {getRefundStatusBadge(rate.refundStatus)}
                                 </div>
-                                
+
                                 <div className="rate-pricing mb-3">
                                   <div className="current-price">
                                     {formatPrice(rate.totalRate)}
                                   </div>
-                                  {rate.recommendedRetailPrice > rate.totalRate && (
+                                  {rate.recommendedRetailPrice >
+                                    rate.totalRate && (
                                     <div className="original-price text-muted text-decoration-line-through">
                                       {formatPrice(rate.recommendedRetailPrice)}
                                     </div>
@@ -371,23 +419,31 @@ const RoomList = () => {
                                 <div className="rate-features mb-3">
                                   <div className="feature-item">
                                     <FaInfoCircle className="text-muted me-2" />
-                                    <span className="small">{rate.contractLabel}</span>
+                                    <span className="small">
+                                      {rate.contractLabel}
+                                    </span>
                                   </div>
-                                  {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
-                                    <div className="feature-item">
-                                      <FaShieldAlt className="text-muted me-2" />
-                                      <span className="small">{rate.cancellationPolicies[0].policyText}</span>
-                                    </div>
-                                  )}
+                                  {rate.cancellationPolicies &&
+                                    rate.cancellationPolicies.length > 0 && (
+                                      <div className="feature-item">
+                                        <FaShieldAlt className="text-muted me-2" />
+                                        <span className="small">
+                                          {
+                                            rate.cancellationPolicies[0]
+                                              .policyText
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
                                 </div>
 
-                                <Button 
-                                  variant="primary" 
+                                <Button
+                                  variant="primary"
                                   className="w-100 book-now-btn"
                                   onClick={() => handleBooking(rate)}
                                 >
-                                  <FaMoneyBillWave className="me-2" />
-                                  Book Now
+                                  <FaMoneyBillWave className="me-2" /> View
+                                  Details / Book
                                 </Button>
                               </Card.Body>
                             </Card>
@@ -399,47 +455,233 @@ const RoomList = () => {
                 ))}
               </Accordion>
             </div>
+
+            {/* Static Sections for future dynamic data */}
+            <div className="mt-4">
+              <Card className="mb-4">
+                <Card.Header as="h6">Additional Information</Card.Header>
+                <Card.Body>
+                  <ul className="mb-0 text-muted">
+                    <li>
+                      Mandatory gala dinner fees may apply on certain dates.
+                      Please contact the hotel directly for more information.
+                    </li>
+                    <li>
+                      Additional taxes or resort fees may be collected at the
+                      property during check-in.
+                    </li>
+                    <li>
+                      Special requests are subject to availability and may incur
+                      additional charges.
+                    </li>
+                    <li>
+                      Photo identification and a credit card or cash deposit may
+                      be required at check-in for incidental charges.
+                    </li>
+                  </ul>
+                </Card.Body>
+              </Card>
+
+              <Card className="mb-4">
+                <Card.Header as="h6">Policies</Card.Header>
+                <Card.Body>
+                  <Row className="g-3">
+                    <Col md={6}>
+                      <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span className="text-muted">Check-in</span>
+                        <span className="fw-semibold">After 14:00</span>
+                      </div>
+                      <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span className="text-muted">Check-out</span>
+                        <span className="fw-semibold">Before 12:00</span>
+                      </div>
+                      <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span className="text-muted">Children</span>
+                        <span className="fw-semibold">
+                          Policies vary by room
+                        </span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span className="text-muted">Deposit</span>
+                        <span className="fw-semibold">May be required</span>
+                      </div>
+                      <div className="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span className="text-muted">Additional Bed</span>
+                        <span className="fw-semibold">
+                          Subject to availability
+                        </span>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <span className="text-muted">Cancellation</span>
+                        <span className="fw-semibold">See rate conditions</span>
+                      </div>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </div>
           </div>
         </main>
       </div>
 
       {/* Booking Modal */}
-      <Modal show={showBookingModal} onHide={() => setShowBookingModal(false)} size="lg">
+      <Modal
+        show={showBookingModal}
+        onHide={() => setShowBookingModal(false)}
+        size="xl"
+        aria-labelledby="room-detail-modal"
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Booking</Modal.Title>
+          <Modal.Title id="room-detail-modal">Room Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedRate && (
-            <div>
-              <h5>{selectedRate.roomCategory}</h5>
-              <p className="text-muted">{selectedRate.roomTypeDescription}</p>
-              <div className="booking-details-modal">
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Meal Plan:</span>
-                  <span className="fw-semibold">{selectedRate.mealPlan}</span>
+            <Row className="g-4">
+              <Col md={6}>
+                <div
+                  id="roomGallery"
+                  className="carousel slide"
+                  data-bs-ride="carousel"
+                >
+                  <div className="carousel-inner rounded">
+                    {sampleGallery.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`carousel-item ${idx === 0 ? "active" : ""}`}
+                      >
+                        <img src={img} className="d-block w-100" alt="Room" />
+                      </div>
+                    ))}
+
+                    {/* <div className="carousel-item active">
+  <img
+    src={meta.hotelImage}
+    className="d-block w-100"
+    alt="Room"
+  />
+</div> */}
+                  </div>
+                  <button
+                    className="carousel-control-prev"
+                    type="button"
+                    data-bs-target="#roomGallery"
+                    data-bs-slide="prev"
+                    aria-label="Previous image"
+                  >
+                    <span
+                      className="carousel-control-prev-icon"
+                      aria-hidden="true"
+                    ></span>
+                    <span className="visually-hidden">Previous</span>
+                  </button>
+                  <button
+                    className="carousel-control-next"
+                    type="button"
+                    data-bs-target="#roomGallery"
+                    data-bs-slide="next"
+                    aria-label="Next image"
+                  >
+                    <span
+                      className="carousel-control-next-icon"
+                      aria-hidden="true"
+                    ></span>
+                    <span className="visually-hidden">Next</span>
+                  </button>
                 </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Total Rate:</span>
-                  <span className="fw-semibold text-primary">{formatPrice(selectedRate.totalRate)}</span>
+              </Col>
+              <Col md={6}>
+                <h5 className="mb-2">{selectedRate.roomCategory}</h5>
+                <p className="text-muted">{selectedRate.roomTypeDescription}</p>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  <Badge bg="secondary">High speed internet</Badge>
+                  <Badge bg="secondary">Private bathroom</Badge>
+                  <Badge bg="secondary">Kitchen</Badge>
+                  <Badge bg="secondary">TV</Badge>
                 </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Refund Status:</span>
-                  <span>{getRefundStatusBadge(selectedRate.refundStatus)}</span>
+                <div className="booking-details-modal">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Meal Plan:</span>
+                    <span className="fw-semibold">{selectedRate.mealPlan}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Rate:</span>
+                    <span className="fw-semibold text-primary">
+                      {formatPrice(selectedRate.totalRate)}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Refund Status:</span>
+                    <span>
+                      {getRefundStatusBadge(selectedRate.refundStatus)}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Contract:</span>
+                    <span className="small text-muted">
+                      {selectedRate.contractLabel}
+                    </span>
+                  </div>
                 </div>
-                <div className="d-flex justify-content-between">
-                  <span>Contract:</span>
-                  <span className="small text-muted">{selectedRate.contractLabel}</span>
-                </div>
-              </div>
-            </div>
+              </Col>
+            </Row>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowBookingModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowBookingModal(false)}
+          >
             Cancel
           </Button>
-          <Button variant="primary">
-            Confirm Booking
+          <Button
+           variant="primary"
+            className="btn-confirm-booking"
+            size="sm"
+            onClick={() => {
+              // const nationalityValue = selectedNationality?.value;
+              // const nationalityCode =
+              //   typeof nationalityValue === "string" &&
+              //   nationalityValue.length === 2
+              //     ? nationalityValue
+              //     : "AF";
+              // const agentIdToUse = agent || "101";
+              // const roomsPayload = rooms.map((r) => ({
+              //   adults: r.adults || 1,
+              //   children: r.children || 0,
+              //   adultAges: Array.from({ length: r.adults || 1 }, () => 30),
+              // }));
+              // const payload = {
+              //   checkInDate: checkIn,
+              //   checkOutDate: checkOut,
+              //   hotelCode:
+              //     hotel.hotelCode ||
+              //     hotel.id?.split("-").slice(1).join("-") ||
+              //     "",
+              //   nationality: nationalityCode,
+              //   agentId: String(agentIdToUse),
+              //   apiId: 11,
+              //   rooms: roomsPayload,
+              // };
+              // const meta = {
+              //   hotelName: hotel.name,
+              //   address: hotel.address || hotel.city,
+              //   starRating: hotel.rating || 0,
+              //   phone: "",
+              //   hotelImage: hotel.image,
+              // };
+              try {
+                // sessionStorage.setItem(
+                //   "roomListPayload",
+                //   JSON.stringify({ payload, meta })
+                // );
+              } catch {}
+              window.open("/hotel-booking-page", "_blank");
+            }}
+          >
+           Confirm Booking
           </Button>
         </Modal.Footer>
       </Modal>

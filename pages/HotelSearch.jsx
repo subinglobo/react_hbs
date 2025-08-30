@@ -244,6 +244,7 @@ export default function HotelSearch() {
   const [pollStatus, setPollStatus] = useState("IDLE");
   const [searchId, setSearchId] = useState(null);
   const [isDestinationLoading, setIsDestinationLoading] = useState(false);
+  const resultsRef = useRef(null);
 
   // Filter options
   const starOptions = [
@@ -387,9 +388,11 @@ export default function HotelSearch() {
     return filteredResults;
   }, [filteredResults, pageIndex]);
 
+  const effectiveTotalPages = useMemo(() => Math.max(1, totalPages - 1), [totalPages]);
+
   const pageNumbers = useMemo(() => {
     const current = pageIndex + 1;
-    const total = Math.max(1, Math.ceil(totalElements / pageSize));
+    const total = effectiveTotalPages;
     const nums = [];
     if (total <= 7) {
       for (let i = 1; i <= total; i++) nums.push(i);
@@ -403,12 +406,18 @@ export default function HotelSearch() {
       nums.push(total);
     }
     return nums;
-  }, [pageIndex, totalElements, pageSize]);
+  }, [pageIndex, effectiveTotalPages]);
 
   const goToPage = (idx) => {
-    const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
-    if (idx < 0 || idx >= totalPages) return;
+    const total = effectiveTotalPages;
+    if (idx < 0 || idx >= total) return;
     setPageIndex(idx);
+    // Smooth scroll to results
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
   };
 
   const countryList = async () => {
@@ -458,10 +467,13 @@ export default function HotelSearch() {
     // Don't load cities on initial render to prevent UI blocking
   }, []);
 
-  // Reset page index when filters change
+  // Reset page index when filters change and auto-scroll to results
   useEffect(() => {
     setPageIndex(0);
-  }, [hotelSearchTerm, starRating, hotelType, channelType]);
+    if (hasSearchResult && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [hotelSearchTerm, starRating, hotelType, channelType, sortBy]);
 
   const formatDate = (date) => date.toISOString().split("T")[0];
 
@@ -506,11 +518,19 @@ export default function HotelSearch() {
     return newErrors;
   };
 
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _omit, ...rest } = prev;
+      return rest;
+    });
+  };
+
   const fetchHotels = async (page, searchId, agentId) => {
     try {
       const params = {
         agentId: 1,   //agentId || 1,
-        page: page + 1, // Backend expects 1-based indexing
+        page: page, // Use 0-based page indexing
         pageSize,
         sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
         sortOrder: sortBy === "priceAsc" || sortBy === "ratingAsc" || sortBy === "nameAsc" ? "asc" : "desc",
@@ -528,7 +548,9 @@ export default function HotelSearch() {
                 ? `${searchId}-${hotel.hotelCode}`
                 : `${searchId}-h${index + 1}`,
               searchId,
+              hotelCode: hotel.hotelCode || null,
               name: hotel.hotelName || "Unknown Hotel",
+              address: hotel.hotelAddress || "",
               city: hotel.hotelAddress
                 ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
                 : "Unknown City",
@@ -645,6 +667,8 @@ export default function HotelSearch() {
       setHasSearched(false);
       return;
     }
+    // clear any stale errors on valid submit
+    setErrors({});
 
     setIsLoading(true);
     setHasSearched(true);
@@ -693,9 +717,8 @@ export default function HotelSearch() {
       setSearchId(searchId);
 
       const params = {
-       
         agentId : 1,
-        page: 1, // Start with page 1
+        page: 0, // Start with page 0
         pageSize,
         sortBy: sortBy === "priceAsc" || sortBy === "priceDesc" ? "baseRate" : sortBy,
         sortOrder: sortBy === "priceAsc" || sortBy === "ratingAsc" || sortBy === "nameAsc" ? "asc" : "desc",
@@ -714,7 +737,9 @@ export default function HotelSearch() {
                   ? `${searchId}-${hotel.hotelCode}`
                   : `${searchId}-h${index + 1}`,
                 searchId,
+                hotelCode: hotel.hotelCode || null,
                 name: hotel.hotelName || "Unknown Hotel",
+                address: hotel.hotelAddress || "",
                 city: hotel.hotelAddress
                   ? hotel.hotelAddress.split(", ").pop() || "Unknown City"
                   : "Unknown City",
@@ -802,7 +827,10 @@ export default function HotelSearch() {
                       <Select
                         options={nationalityList}
                         value={selectedNationality}
-                        onChange={(option) => setSelectedNationality(option)}
+                        onChange={(option) => {
+                          setSelectedNationality(option);
+                          if (option) clearError("nationality");
+                        }}
                         placeholder="Select nationality"
                         isSearchable
                         isClearable
@@ -834,7 +862,10 @@ export default function HotelSearch() {
                       <Select
                         options={destinationOptions}
                         value={selectedDestination}
-                        onChange={(option) => setSelectedDestination(option)}
+                        onChange={(option) => {
+                          setSelectedDestination(option);
+                          if (option) clearError("destination");
+                        }}
                         placeholder="Where do you want to go?"
                         isSearchable
                         isClearable
@@ -907,6 +938,7 @@ export default function HotelSearch() {
                         onChange={(e) => {
                           const newCheckIn = e.target.value;
                           setCheckIn(newCheckIn);
+                          if (newCheckIn) clearError("checkIn");
                           if (
                             !checkOut ||
                             new Date(newCheckIn) >= new Date(checkOut)
@@ -935,7 +967,10 @@ export default function HotelSearch() {
                         type="date"
                         value={checkOut}
                         min={minCheckOutDate}
-                        onChange={(e) => setCheckOut(e.target.value)}
+                        onChange={(e) => {
+                          setCheckOut(e.target.value);
+                          if (e.target.value) clearError("checkOut");
+                        }}
                       />
                       {errors.checkOut && (
                         <div className="text-danger small mt-1">
@@ -988,7 +1023,10 @@ export default function HotelSearch() {
                       <Form.Select
                         className="form-control-modern"
                         value={agent}
-                        onChange={(e) => setAgent(e.target.value)}
+                        onChange={(e) => {
+                          setAgent(e.target.value);
+                          if (e.target.value) clearError("agent");
+                        }}
                       >
                         <option value="">Select Agent</option>
                         <option value="101">Agent 101</option>
@@ -1063,9 +1101,21 @@ export default function HotelSearch() {
 
           {hasSearched && pollStatus === "IN_PROGRESS" && (
             <Card className="shadow-sm rounded-xl mb-4">
-              <Card.Body className="text-center py-3">
-                <Spinner animation="border" size="sm" className="me-2" />
-                <span>Loading more results...</span>
+              <Card.Body className="text-center py-5">
+                <div className="results-loader">
+                  <div className="loader-ring">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <h4 className="text-primary fw-bold mt-3 mb-1">
+                    Fetching Best Results...
+                  </h4>
+                  <p className="text-muted small mb-0">
+                    Comparing rates across multiple providers
+                  </p>
+                </div>
               </Card.Body>
             </Card>
           )}
@@ -1084,7 +1134,7 @@ export default function HotelSearch() {
           )}
 
           {hasSearchResult && !isLoading && pollStatus !== "IN_PROGRESS" && (
-            <div>
+            <div ref={resultsRef}>
               <Card className="shadow-sm rounded-xl mb-3 filtersection">
                 <Card.Body className="p-3">
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
@@ -1326,11 +1376,11 @@ export default function HotelSearch() {
                               </div>
                             </div>
                             <Card.Body className="p-3">
-                              <h6 className="hotel-name mb-2 fw-bold">
-                                {hotel.name}
+                              <h6 className="hotel-name mb-2 fw-bold" aria-label="hotel-name">
+                                {hotel.name || hotel.hotelName || "Unknown Hotel"}
                               </h6>
                               <p className="hotel-location mb-2 text-muted small">
-                                📍 {hotel.city}
+                                📍 {hotel.address || hotel.city}
                               </p>
                               <Badge bg="success" className="mb-3 hotel-badge">
                                 {hotel.badge}
@@ -1345,15 +1395,36 @@ export default function HotelSearch() {
                                   className="btn-view-rooms" 
                                   size="sm"
                                   onClick={() => {
-                                    // In a real application, you would make an API call here to get room data
-                                    // For now, we'll navigate to the room list page
-                                    navigate('/room-list', { 
-                                      state: { 
-                                        hotelId: hotel.id,
-                                        hotelName: hotel.name,
-                                        // Add other hotel details as needed
-                                      }
-                                    });
+                                    const nationalityValue = selectedNationality?.value;
+                                    const nationalityCode = (typeof nationalityValue === 'string' && nationalityValue.length === 2)
+                                      ? nationalityValue
+                                      : 'AF';
+                                    const agentIdToUse = agent || '101';
+                                    const roomsPayload = rooms.map(r => ({
+                                      adults: r.adults || 1,
+                                      children: r.children || 0,
+                                      adultAges: Array.from({ length: r.adults || 1 }, () => 30),
+                                    }));
+                                    const payload = {
+                                      checkInDate: checkIn,
+                                      checkOutDate: checkOut,
+                                      hotelCode: hotel.hotelCode || hotel.id?.split('-').slice(1).join('-') || '',
+                                      nationality: nationalityCode,
+                                      agentId: String(agentIdToUse),
+                                      apiId: 11,
+                                      rooms: roomsPayload,
+                                    };
+                                    const meta = {
+                                      hotelName: hotel.name,
+                                      address: hotel.address || hotel.city,
+                                      starRating: hotel.rating || 0,
+                                      phone: '',
+                                      hotelImage : hotel.image,
+                                    };
+                                    try {
+                                      sessionStorage.setItem('roomListPayload', JSON.stringify({ payload, meta }));
+                                    } catch {}
+                                    window.open('/room-list', '_blank');
                                   }}
                                 >
                                   View Rooms
@@ -1397,36 +1468,46 @@ export default function HotelSearch() {
                 )}
 
                 {filteredResults.length > 0 && (
-                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
-                    <small className="text-muted fw-semibold">
-                      Showing {pageIndex * pageSize + 1}-
-                      {Math.min(pageIndex * pageSize + pageSize, filteredResults.length)}{" "}
-                      of {filteredResults.length} results
-                    </small>
-                    <Pagination className="mb-0 pagination-modern">
-                      <Pagination.Prev
-                        disabled={pageIndex === 0}
-                        onClick={() => goToPage(pageIndex - 1)}
-                      />
-                      {pageNumbers.map((n) =>
-                        typeof n === "number" ? (
-                          <Pagination.Item
-                            key={n}
-                            active={n === pageIndex + 1}
-                            onClick={() => goToPage(n - 1)}
-                          >
-                            {n}
-                          </Pagination.Item>
-                        ) : (
-                          <Pagination.Ellipsis key={n} disabled />
-                        )
-                      )}
-                      <Pagination.Next
-                        disabled={pageIndex >= Math.ceil(filteredResults.length / pageSize) - 1}
-                        onClick={() => goToPage(pageIndex + 1)}
-                      />
-                    </Pagination>
-                  </div>
+                  (() => {
+                    const hasClientOnlyFilters = Boolean(hotelSearchTerm) || hotelType.length > 0;
+                    const showingStart = pageIndex * pageSize + 1;
+                    const showingEnd = hasClientOnlyFilters
+                      ? Math.min(pageIndex * pageSize + pageSize, filteredResults.length)
+                      : Math.min(pageIndex * pageSize + pageSize, totalElements);
+                    const totalCount = hasClientOnlyFilters ? filteredResults.length : totalElements;
+                    return (
+                      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
+                        <small className="text-muted fw-semibold">
+                          Showing {showingStart}-{showingEnd} of {totalCount} results
+                        </small>
+                        {!hasClientOnlyFilters && (
+                          <Pagination className="mb-0 pagination-modern">
+                            <Pagination.Prev
+                              disabled={pageIndex === 0}
+                              onClick={() => goToPage(pageIndex - 1)}
+                            />
+                            {pageNumbers.map((n) =>
+                              typeof n === "number" ? (
+                                <Pagination.Item
+                                  key={n}
+                                  active={n === pageIndex + 1}
+                                  onClick={() => goToPage(n - 1)}
+                                >
+                                  {n}
+                                </Pagination.Item>
+                              ) : (
+                                <Pagination.Ellipsis key={n} disabled />
+                              )
+                            )}
+                            <Pagination.Next
+                              disabled={pageIndex >= effectiveTotalPages - 1}
+                              onClick={() => goToPage(pageIndex + 1)}
+                            />
+                          </Pagination>
+                        )}
+                      </div>
+                    );
+                  })()
                 )}
               </div>
             </div>
