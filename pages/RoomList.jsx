@@ -637,51 +637,20 @@ const RoomList = () => {
             Cancel
           </Button>
           <Button
-           variant="primary"
+            variant="primary"
             className="btn-confirm-booking"
             size="sm"
             onClick={() => {
-              // const nationalityValue = selectedNationality?.value;
-              // const nationalityCode =
-              //   typeof nationalityValue === "string" &&
-              //   nationalityValue.length === 2
-              //     ? nationalityValue
-              //     : "AF";
-              // const agentIdToUse = agent || "101";
-              // const roomsPayload = rooms.map((r) => ({
-              //   adults: r.adults || 1,
-              //   children: r.children || 0,
-              //   adultAges: Array.from({ length: r.adults || 1 }, () => 30),
-              // }));
-              // const payload = {
-              //   checkInDate: checkIn,
-              //   checkOutDate: checkOut,
-              //   hotelCode:
-              //     hotel.hotelCode ||
-              //     hotel.id?.split("-").slice(1).join("-") ||
-              //     "",
-              //   nationality: nationalityCode,
-              //   agentId: String(agentIdToUse),
-              //   apiId: 11,
-              //   rooms: roomsPayload,
-              // };
-              // const meta = {
-              //   hotelName: hotel.name,
-              //   address: hotel.address || hotel.city,
-              //   starRating: hotel.rating || 0,
-              //   phone: "",
-              //   hotelImage: hotel.image,
-              // };
-              try {
-                // sessionStorage.setItem(
-                //   "roomListPayload",
-                //   JSON.stringify({ payload, meta })
-                // );
+            try {
+                sessionStorage.setItem(
+                  "bookingData",
+                  JSON.stringify({ selectedRate, hotelStaticData, payload })
+                );
               } catch {}
               window.open("/hotel-booking-page", "_blank");
             }}
           >
-           Confirm Booking
+            Confirm Booking
           </Button>
         </Modal.Footer>
       </Modal>
